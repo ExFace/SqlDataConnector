@@ -60,6 +60,10 @@ class MsSQL extends AbstractSQL {
 		/*	@var $qpart \exface\Core\CommonLogic\QueryBuilder\QueryPartSelect */
 		foreach ($this->get_attributes() as $qpart){
 			$skipped = false;
+			// First see, if the attribute has some kind of special data type (e.g. binary)
+			if ($qpart->get_attribute()->get_data_address_property('SQL_DATA_TYPE') == 'binary'){
+				$this->add_binary_column($qpart->get_alias());
+			}
 			// if the query has a GROUP BY, we need to put the UID-Attribute in the core select as well as in the enrichment select
 			// otherwise the enrichment joins won't work!
 			if ($group_by 

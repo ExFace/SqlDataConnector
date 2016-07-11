@@ -56,7 +56,7 @@ class MsSQL extends AbstractSqlConnector {
 			$this->connect();
 		}
 		
-		if (!$result = @ sqlsrv_query($this->get_current_connection(), $sql)) {
+		if (!$result = sqlsrv_query($this->get_current_connection(), $sql)) {
 			throw new DataConnectionError("Execution of a query to the database failed - " . $this->get_last_error(), $sql);
 		} else {
 			return $this->make_array($result);
