@@ -24,7 +24,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 	 * @see \exface\Core\Interfaces\DataSources\ModelLoaderInterface::load_object()
 	 */
 	public function load_object(Object $object){
-		$exface = $object->exface();
+		$exface = $object->get_workbench();
 		$load_behaviors = false;
 		if ($object->get_id()){
 			$q_where = 'o.oid = ' . $object->get_id();
@@ -106,15 +106,15 @@ class SqlModelLoader implements ModelLoaderInterface {
 						$object->set_label_alias($row['attribute_alias']);
 						// always add a LABEL attribute if it is not already called LABEL (widgets always need to show the LABEL!)
 						// IDEA cleaner code does not work for some reason. Didn't have time to check out why...
-						/*if ($row['attribute_alias'] != $object->get_model()->exface()->get_config_value('object_label_alias')){
+						/*if ($row['attribute_alias'] != $object->get_model()->get_workbench()->get_config_value('object_label_alias')){
 						 $label_attribute = attribute::from_db_row($row);
-						 $label_attribute->set_alias($object->get_model()->exface()->get_config_value('object_label_alias'));
+						 $label_attribute->set_alias($object->get_model()->get_workbench()->get_config_value('object_label_alias'));
 						 $label_attribute->set_default_display_order(-1);
 						 $object->get_attributes()->add($label_attribute);
 						 }*/
-						if ($row['attribute_alias'] != $object->get_model()->exface()->get_config_value('object_label_alias')){
+						if ($row['attribute_alias'] != $object->get_model()->get_workbench()->get_config_value('object_label_alias')){
 							$label_attribute = $row;
-							$label_attribute['attribute_alias'] = $object->get_model()->exface()->get_config_value('object_label_alias');
+							$label_attribute['attribute_alias'] = $object->get_model()->get_workbench()->get_config_value('object_label_alias');
 							$label_attribute['attribute_hidden_flag'] = '1';
 							$label_attribute['attribute_required_flag'] = '0';
 							// The special label attribute should not be marked as label because it then would be returned by get_label..(),
@@ -238,7 +238,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 		// If anything goes wrong, create a blank widget with the overall default widget type (from the config)
 		if (!$uxon) {
 			$uxon = new UxonObject();
-			$uxon->set_property('widget_type', $model->exface()->get_config_value('widget_for_unknown_data_types'));
+			$uxon->set_property('widget_type', $model->get_workbench()->get_config_value('widget_for_unknown_data_types'));
 		}
 		// Add some attribute specific values
 		$uxon->caption = $attr->get_name();
@@ -266,7 +266,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 			}
 			
 			// If there is a user logged in, fetch his specific connctor config (credentials)
-			if ($user_name = $data_source->exface()->context()->get_scope_user()->get_user_name()){
+			if ($user_name = $data_source->get_workbench()->context()->get_scope_user()->get_user_name()){
 				$join_user_credentials = ' LEFT JOIN (exf_data_connection_credentials dcc LEFT JOIN exf_user_credentials uc ON dcc.user_credentials_oid = uc.oid INNER JOIN exf_user u ON uc.user_oid = u.oid AND u.username = "' . $user_name . '") ON dcc.data_connection_oid = dc.oid';
 				$select_user_credentials = ', uc.data_connector_config AS user_connector_config';
 			}
@@ -299,8 +299,8 @@ class SqlModelLoader implements ModelLoaderInterface {
 					$filter_context = array($filter_context);
 				}
 				foreach ($filter_context as $filter){
-					$condition = ConditionFactory::create_from_object_or_array($data_source->exface(), $filter);
-					$data_source->exface()->context()->get_scope_application()->get_filter_context()->add_condition($condition);
+					$condition = ConditionFactory::create_from_object_or_array($data_source->get_workbench(), $filter);
+					$data_source->get_workbench()->context()->get_scope_application()->get_filter_context()->add_condition($condition);
 				}
 			}
 		}

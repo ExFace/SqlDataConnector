@@ -9,7 +9,7 @@ use exface\Core\CommonLogic\Model\RelationPath;
 /**
  * A query builder for oracle SQL.
  * 
- * @author aka
+ * @author Andrej Kabachnik
  *
  */
 class MySQL extends AbstractSQL {

@@ -5,7 +5,7 @@ use exface\Core\CommonLogic\AbstractDataConnector;
 /**
  * A query builder for oracle SQL.
  * 
- * @author aka
+ * @author Andrej Kabachnik
  *
  */
 class OracleSQL extends AbstractSQL {

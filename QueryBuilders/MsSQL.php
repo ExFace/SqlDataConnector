@@ -4,7 +4,7 @@ namespace exface\SqlDataConnector\QueryBuilders;
 /**
  * A query builder for oracle SQL.
  * 
- * @author aka
+ * @author Andrej Kabachnik
  *
  */
 class MsSQL extends AbstractSQL {

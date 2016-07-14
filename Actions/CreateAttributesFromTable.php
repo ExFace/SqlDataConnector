@@ -6,7 +6,7 @@ use exface\Core\CommonLogic\AbstractAction;
 /**
  * This action runs one or more selected test steps
  * 
- * @author aka
+ * @author Andrej Kabachnik
  *
  */
 class CreateAttributesFromTable extends AbstractAction {
@@ -22,10 +22,10 @@ class CreateAttributesFromTable extends AbstractAction {
 			throw new ActionRuntimeException('Action "' . $this->get_alias() . '" exprects an exface.Core.OBJECT as input, "' . $this->get_input_data_sheet()->get_meta_object()->get_alias_with_namespace() . '" given instead!');
 		}
 		
-		$result_data_sheet = $this->exface()->data()->create_data_sheet($this->exface()->model()->get_object('exface.Core.ATTRIBUTE'));
+		$result_data_sheet = $this->get_workbench()->data()->create_data_sheet($this->get_workbench()->model()->get_object('exface.Core.ATTRIBUTE'));
 		$skipped_columns = 0;
 		foreach ($this->get_input_data_sheet()->get_rows() as $input_row){
-			$target_obj = $this->exface()->model()->get_object($input_row[$this->get_input_data_sheet()->get_uid_column()->get_name()]);
+			$target_obj = $this->get_workbench()->model()->get_object($input_row[$this->get_input_data_sheet()->get_uid_column()->get_name()]);
 			foreach ($this->get_app()->get_attribute_properties_from_table($target_obj, $input_row['DATA_ADDRESS']) as $row){
 				if ($target_obj->find_attributes_by_data_address($row['DATA_ADDRESS'])){
 					$skipped_columns++;

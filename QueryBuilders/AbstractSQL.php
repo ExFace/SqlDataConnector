@@ -15,7 +15,7 @@ use exface\Core\DataTypes\NumberDataType;
 /**
  * A query builder for oracle SQL.
  * 
- * @author aka
+ * @author Andrej Kabachnik
  *
  */
 abstract class AbstractSQL extends AbstractQueryBuilder{

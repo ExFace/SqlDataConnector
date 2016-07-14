@@ -11,7 +11,7 @@ class SqlDataConnectorApp extends \exface\Core\CommonLogic\AbstractApp {
 	public function get_attribute_properties_from_table(Object $meta_object, $table_name){
 		// Determine the DB type
 		if (!$this->get_explorer()){
-			$name = $this->exface()->create_name_resolver($meta_object->get_data_source()->get_data_connector_alias(), NameResolver::OBJECT_TYPE_DATA_CONNECTOR);
+			$name = $this->get_workbench()->create_name_resolver($meta_object->get_data_source()->get_data_connector_alias(), NameResolver::OBJECT_TYPE_DATA_CONNECTOR);
 			switch ($name->get_alias()){
 				case 'OracleSQL': $this->set_explorer(new OracleSQLExplorer($this)); break;
 				case 'MySQL':
@@ -25,7 +25,7 @@ class SqlDataConnectorApp extends \exface\Core\CommonLogic\AbstractApp {
 	
 	public function get_data_type_id($data_type_alias){
 		if (!$this->data_types){
-			$this->data_types = $this->exface()->data()->create_data_sheet($this->exface()->model()->get_object('exface.Core.DATATYPE'));
+			$this->data_types = $this->get_workbench()->data()->create_data_sheet($this->get_workbench()->model()->get_object('exface.Core.DATATYPE'));
 			$this->data_types->get_columns()->add_multiple(array($this->data_types->get_meta_object()->get_uid_alias(), $this->data_types->get_meta_object()->get_label_alias()));
 			$this->data_types->data_read(0, 0);
 		}
