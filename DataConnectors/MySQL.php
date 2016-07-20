@@ -72,7 +72,7 @@ class MySQL extends AbstractSqlConnector {
 	 * {@inheritDoc}
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::perform_query()
 	 */
-	protected function perform_query($sql) {
+	protected function perform_query($sql, $options = null) {
 		if (is_null($this->get_current_connection()) || !is_resource($this->get_current_connection())) {
 			$this->connect();
 		}
@@ -106,7 +106,7 @@ class MySQL extends AbstractSqlConnector {
 	* @param: $rs Recordset to be packaged into an array
 	*/
 	function make_array($rs=''){
-		if(!$rs) return false;
+		if(!($rs instanceof \mysqli_result)) return array();
 		$rsArray = array();
 		while ($row = mysqli_fetch_assoc($rs)) {
 			$rsArray[] = $row;

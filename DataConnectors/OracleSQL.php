@@ -35,7 +35,7 @@ class OracleSQL extends AbstractSqlConnector {
 		} else {
 			$this->set_current_connection($conn);
 			// Set default date and time formats to ensure compatibility with ExFace
-			$this->perform_query("ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS' NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS' NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'", true);
+			$this->perform_query("ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS' NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS' NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'", array('return_raw_result' => true));
 		}
 	}
 	
@@ -53,7 +53,8 @@ class OracleSQL extends AbstractSqlConnector {
 	 * {@inheritDoc}
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::perform_query()
 	 */
-	protected function perform_query($sql, $return_raw_result = false) {
+	protected function perform_query($sql, $options = null) {
+		$return_raw_result = $options['return_raw_result'];
 		if (is_null($this->get_current_connection()) || !is_resource($this->get_current_connection())) {
 			$this->connect();
 		}
