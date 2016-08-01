@@ -2,6 +2,7 @@
 
 use exface\Core\DataTypes\AbstractDataType;
 use exface\Core\CommonLogic\AbstractDataConnector;
+use exface\Core\Exceptions\QueryBuilderException;
 /**
  * A query builder for oracle SQL.
  * 
@@ -353,17 +354,13 @@ class OracleSQL extends AbstractSQL {
 		return $output;
 	}
 	
-	public function create(AbstractDataConnector $data_connection = null){
-		// If there are no values given for the main UID, use the primary key sequence from the data address properties of the main object
-		if (!$this->get_value($this->get_main_object()->get_uid_alias())){
-			// If there is no primary key sequence defined, try adding '_SEQ' to the table name. This seems to be a wide spread approach.
-			// If this does not work, we will get an SQL error
-			if (!$sequence = $this->get_main_object()->get_data_address_property('PKEY_SEQUENCE')){
-				$sequence = $this->get_main_object()->get_data_address() . '_SEQ';
-			}
-			$this->add_value($this->get_main_object()->get_uid_alias(), $sequence . '.NEXTVAL');
+	protected function get_primary_key_sequence(){
+		// If there is no primary key sequence defined, try adding '_SEQ' to the table name. This seems to be a wide spread approach.
+		// If this does not work, we will get an SQL error
+		if (!$sequence = $this->get_main_object()->get_data_address_property('PKEY_SEQUENCE')){
+			$sequence = $this->get_main_object()->get_data_address() . '_SEQ';
 		}
-		return parent::create($data_connection);
+		return $sequence;
 	}
 	
 	protected function prepare_input_value($value, AbstractDataType $data_type, $sql_data_type = NULL){
@@ -393,6 +390,111 @@ class OracleSQL extends AbstractSQL {
 	 */
 	protected function escape_string($string){
 		return str_replace("'", "''", $string);
+	}
+	
+	/**
+	 * (non-PHPdoc)
+	 * @see \exface\Core\CommonLogic\QueryBuilder\AbstractQueryBuilder::create()
+	 */
+	function create(AbstractDataConnector $data_connection = null){
+		if (!$data_connection) $data_connection = $this->main_object->get_data_connection();
+		if (!$this->is_writable()) return 0;
+		$insert_ids = array();
+	
+		$values = array();
+		$columns = array();
+		$uid_qpart = null;
+		// add values
+		foreach ($this->get_values() as $qpart){
+			$attr = $qpart->get_attribute();
+			if ($attr->get_relation_path()->to_string()) {
+				throw new QueryBuilderException('Cannot create attribute "' . $attr->get_alias() . '" of object "' . $this->get_main_object()->get_alias() . '". Attributes of related objects cannot be created within the same SQL query!');
+				continue;
+			}
+			// Ignore attributes, that do not reference an sql column (= do not have a data address at all)
+			if (!$attr->get_data_address() || $this->check_for_sql_statement($attr->get_data_address())) {
+				continue;
+			}
+			// Save the query part for later processing if it is the object's UID
+			if ($attr->is_uid_for_object()){
+				$uid_qpart = $qpart;
+			}
+				
+			$columns[] = $attr->get_data_address();
+			foreach ($qpart->get_values() as $row => $value){
+				$values[$row][] = $this->prepare_input_value($value, $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
+			}
+		}
+	
+		if (is_null($uid_qpart)){
+			// If there is no UID column, but the UID attribute has a custom insert statement, add it at this point manually
+			// This is important because the UID will mostly not be marked as a mandatory attribute in order to preserve the
+			// possibility of mixed creates and updates among multiple rows. But an empty non-required attribute will never
+			// show up as a value here. Still that value is required!
+			if ($uid_generator = $this->get_main_object()->get_uid_attribute()->get_data_address_property('SQL_INSERT')){
+				$last_uid_sql_var = '@last_uid';
+				$columns[] = $this->get_main_object()->get_uid_attribute()->get_data_address();
+				foreach ($values as $nr => $row){
+					$values[$nr][] = $last_uid_sql_var . ' := ' . $uid_generator;
+				}
+			} else {
+				$columns[] = $this->get_main_object()->get_uid_attribute()->get_data_address();
+				foreach ($values as $nr => $row){
+					$values[$nr][$this->get_main_object()->get_uid_attribute()->get_data_address()] = $this->get_primary_key_sequence() . '.NEXTVAL';
+				}
+			}
+		}
+	
+		foreach ($values as $nr => $row){
+			foreach ($row as $val){
+				$values[$nr] = implode(',', $row);
+			}
+		}
+		
+		if (count($values) > 1){
+			foreach ($values as $nr => $vals){
+				$query = 'INSERT INTO ' . $this->get_main_object()->get_data_address() . ' (' . implode(', ', $columns) . ') VALUES (' . $vals . ')' . "\n";
+				$result = $data_connection->query($query);
+				
+				// Now get the primary key of the last insert.
+				if ($last_uid_sql_var){
+					// If the primary key was a custom generated one, it was saved to the corresponding SQL variable.
+					// Fetch it from the data base
+					$last_id = reset($data_connection->query('SELECT CONCAT(\'0x\', HEX(' . $last_uid_sql_var . '))')[0]);
+				} else {
+					// If the primary key was autogenerated, fetch it via built-in function
+					$last_id = $data_connection->get_insert_id();
+				}
+					
+				$affected_rows = $data_connection->get_affected_rows_count();
+				// TODO How to get multipla inserted ids???
+				if ($affected_rows){
+					$insert_ids[] = $last_id;
+				}
+			}
+			
+		} else {
+			$query = 'INSERT INTO ' . $this->get_main_object()->get_data_address() . ' (' . implode(', ', $columns) . ') VALUES (' . implode('), (' , $values) . ')';
+			$result = $data_connection->query($query);
+			// Now get the primary key of the last insert.
+			if ($last_uid_sql_var){
+				// If the primary key was a custom generated one, it was saved to the corresponding SQL variable.
+				// Fetch it from the data base
+				$last_id = reset($data_connection->query('SELECT CONCAT(\'0x\', HEX(' . $last_uid_sql_var . '))')[0]);
+			} else {
+				// If the primary key was autogenerated, fetch it via built-in function
+				$last_id = $data_connection->get_insert_id();
+			}
+			
+			$affected_rows = $data_connection->get_affected_rows_count();
+			// TODO How to get multipla inserted ids???
+			if ($affected_rows){
+				$insert_ids[] = $last_id;
+			}
+		}
+	
+		
+		return $insert_ids;
 	}
 }
 ?>
