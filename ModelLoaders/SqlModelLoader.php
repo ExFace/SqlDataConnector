@@ -162,6 +162,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 					if ($object->get_id() != $row['object_oid'] && !in_array($row['object_oid'], $object->get_parent_objects_ids())){
 						// FIXME what is the related_object_key_alias for reverse relations?
 						$rel = new Relation(
+								$exface,
 								$row['oid'], // id
 								$row['rev_relation_alias'], // alias
 								$row['rev_relation_name'], // name (used for captions)
@@ -174,6 +175,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 						// At this point, we know, it is a direct relation. This can only happen if the object has a corresponding direct
 						// attribute. This is why the elseif($attr) is there.
 						$rel = new Relation(
+								$exface,
 								$attr->get_id(),
 								$attr->get_alias(),
 								$attr->get_name(),
