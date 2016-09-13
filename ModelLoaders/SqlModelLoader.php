@@ -106,15 +106,15 @@ class SqlModelLoader implements ModelLoaderInterface {
 						$object->set_label_alias($row['attribute_alias']);
 						// always add a LABEL attribute if it is not already called LABEL (widgets always need to show the LABEL!)
 						// IDEA cleaner code does not work for some reason. Didn't have time to check out why...
-						/*if ($row['attribute_alias'] != $object->get_model()->get_workbench()->get_config_value('object_label_alias')){
+						/*if ($row['attribute_alias'] != $object->get_model()->get_workbench()->get_config()->get_option('OBJECT_LABEL_ALIAS')){
 						 $label_attribute = attribute::from_db_row($row);
-						 $label_attribute->set_alias($object->get_model()->get_workbench()->get_config_value('object_label_alias'));
+						 $label_attribute->set_alias($object->get_model()->get_workbench()->get_config()->get_option('OBJECT_LABEL_ALIAS'));
 						 $label_attribute->set_default_display_order(-1);
 						 $object->get_attributes()->add($label_attribute);
 						 }*/
-						if ($row['attribute_alias'] != $object->get_model()->get_workbench()->get_config_value('object_label_alias')){
+						if ($row['attribute_alias'] != $object->get_model()->get_workbench()->get_config()->get_option('OBJECT_LABEL_ALIAS')){
 							$label_attribute = $row;
-							$label_attribute['attribute_alias'] = $object->get_model()->get_workbench()->get_config_value('object_label_alias');
+							$label_attribute['attribute_alias'] = $object->get_model()->get_workbench()->get_config()->get_option('OBJECT_LABEL_ALIAS');
 							$label_attribute['attribute_hidden_flag'] = '1';
 							$label_attribute['attribute_required_flag'] = '0';
 							// The special label attribute should not be marked as label because it then would be returned by get_label..(),
@@ -240,7 +240,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 		// If anything goes wrong, create a blank widget with the overall default widget type (from the config)
 		if (!$uxon) {
 			$uxon = new UxonObject();
-			$uxon->set_property('widget_type', $model->get_workbench()->get_config_value('widget_for_unknown_data_types'));
+			$uxon->set_property('widget_type', $model->get_workbench()->get_config()->get_option('WIDGET_FOR_UNKNOWN_DATA_TYPES'));
 		}
 		// Add some attribute specific values
 		$uxon->caption = $attr->get_name();
