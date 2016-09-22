@@ -145,9 +145,12 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 				$uid_qpart = $qpart;
 			}
 			
-			$columns[] = $attr->get_data_address();	
+			// Prepare arrays with column aliases and values to implode them later when building the query
+			// Make sure, every column is only addressed once! So the keys of both array actually need to be the column aliases
+			// to prevent duplicates
+			$columns[$attr->get_data_address()] = $attr->get_data_address();	
 			foreach ($qpart->get_values() as $row => $value){
-				$values[$row][] = $this->prepare_input_value($value, $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
+				$values[$row][$attr->get_data_address()] = $this->prepare_input_value($value, $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
 			}
 		}
 		
