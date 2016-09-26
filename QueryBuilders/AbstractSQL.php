@@ -193,6 +193,17 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	}
 	
 	/**
+	 * Performs SQL update queries. Depending on the number of rows to be updated, there will be one or more queries performed. 
+	 * Theoretically attributes with one and multiple value rows can be mixed in one QueryBuilder instance: e.g. some attributes
+	 * need different values per row and others are set to a single value for all rows matching the filter criteria. In this case
+	 * there will be one SQL query to update all single-value-attribtues and potentially multiple queries to update attributes by
+	 * row. The latter queries will only have the respecitve primary key in their WHERE clause, whereas the single-value-query 
+	 * will have the filters from the QueryBuilder.
+	 * 
+	 * In any case, direct updates are only performed on attributes of the main meta object. If an update of a related attribute
+	 * is needed, a separate update query for the meta object of that attribute will be created and will get executed after the
+	 * main query. Subqueries are executed in the order in which the respective attributes were added to the QueryBuilder. 
+	 * 
 	 * (non-PHPdoc)
 	 * @see \exface\Core\CommonLogic\QueryBuilder\AbstractQueryBuilder::update()
 	 */
@@ -208,8 +219,16 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			throw new QueryBuilderException('Cannot perform update on all objects "' . $this->get_main_object()->get_alias() . '"! Forbidden operation!');
 		}
 		
-		$subqueries_qparts = array();	
-		$set = array();
+		// Attributes -> SET	
+		
+		// Array of SET statements for the single-value-query which updates all rows matching the given filters
+		// [ 'data_address = value' ]
+		$updates_by_filter = array(); 
+		// Array of SET statements to update multiple values per attribute. They will be used to build one UPDATE statement per UID value
+		// [ uid_value => [ data_address => 'data_address = value' ] ]
+		$updates_by_uid = array(); 
+		// Array of query parts to be placed in subqueries
+		$subqueries_qparts = array(); 
 		foreach ($this->get_values() as $qpart){
 			$attr = $qpart->get_attribute();
 			if ($attr->get_relation_path()->to_string()) {
@@ -225,26 +244,43 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			if (count($qpart->get_values()) == 1){
 				$values = $qpart->get_values();
 				$value = $this->prepare_input_value(reset($values), $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
-				$set[] = $this->get_main_object()->get_alias() . '.' . $attr->get_data_address() . ' = ' . $value;
+				$updates_by_filter[] = $this->get_main_object()->get_alias() . '.' . $attr->get_data_address() . ' = ' . $value;
 			} else {
 				// TODO check, if there is an id for each value. Those without ids should be put into another query to make an insert
-				$cases = '';
+				//$cases = '';
 				if (count($qpart->get_uids()) == 0){
 					throw new QueryBuilderException('Cannot update attribute "' . $qpart->get_alias() . "': no UIDs for rows to update given!");
 				}
 				foreach ($qpart->get_values() as $row_nr => $value){
 					$value = $this->prepare_input_value($value, $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
-					$cases[$qpart->get_uids()[$row_nr]] = 'WHEN ' . $qpart->get_uids()[$row_nr] . ' THEN ' . $value . "\n";
+					/* IDEA In earlier versions multi-value-updates generated a single query with a CASE statement for each attribute. 
+					 * This worked find for smaller numbers of values (<50) but depleted the memory with hundreds of values per attribute. 
+					 * A quick fix was to introduce separate queries per value. But it takes a lot of time to fire 1000 separate queries. 
+					 * So we could mix the two approaches and make separate queries every 10-30 values with fairly short CASE statements.
+					 * This would shorten the number of queries needed by factor 10-30, but it requires the separation of values of all
+					 * participating attributes into blocks sorted by UID. In other words, the resulting queries must have all values for
+					 * the UIDs they address and a new filter with exactly this list of UIDs.
+					 */
+					//$cases[$qpart->get_uids()[$row_nr]] = 'WHEN ' . $qpart->get_uids()[$row_nr] . ' THEN ' . $value . "\n";
+					$updates_by_uid[$qpart->get_uids()[$row_nr]][$this->get_main_object()->get_alias() . '.' . $attr->get_data_address()] = $this->get_main_object()->get_alias() . '.' . $attr->get_data_address() .' = '. $value;
 				}
-				$set[] = $this->get_main_object()->get_alias() . '.' . $attr->get_data_address() . " = CASE " . $this->get_main_object()->get_uid_attribute()->get_data_address() . " \n" . implode($cases) . " END";
+				// See comment about CASE-based updates a few lines above
+				//$updates_by_filter[] = $this->get_main_object()->get_alias() . '.' . $attr->get_data_address() . " = CASE " . $this->get_main_object()->get_uid_attribute()->get_data_address() . " \n" . implode($cases) . " END";
 			}
 		}
 		
 		// Execute the main query
-		$query = 'UPDATE ' . $this->build_sql_from() . ' SET ' . implode(', ', $set) . $where;
+		foreach ($updates_by_uid as $uid => $row){
+			$query = 'UPDATE ' . $this->build_sql_from() . ' SET ' . implode(', ', $row) . ' WHERE ' . $this->get_main_object()->get_uid_attribute()->get_data_address() . '=' . $uid;
+			$data_connection->query($query);
+			$affected_rows += $data_connection->get_affected_rows_count();
+		}
 		
-		$data_connection->query($query);
-		$affected_rows = $data_connection->get_affected_rows_count();
+		if (count($updates_by_filter) > 0){
+			$query = 'UPDATE ' . $this->build_sql_from() . ' SET ' . implode(', ', $updates_by_filter) . $where;
+			$data_connection->query($query);
+			$affected_rows = $data_connection->get_affected_rows_count();
+		}
 		
 		// Execute Subqueries
 		foreach ($this->split_by_meta_object($subqueries_qparts) as $subquery){
