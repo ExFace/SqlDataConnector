@@ -255,6 +255,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 	}
 	
 	public function load_data_source(DataSourceInterface $data_source, $data_connection_id_or_alias = NULL){
+		$exface = $data_source->get_workbench();
 		// If the data connector was not set for this data source previously, load it now
 		if (!$data_source->get_data_connector_alias()){
 			if ($data_connection_id_or_alias){
@@ -301,7 +302,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 					$filter_context = array($filter_context);
 				}
 				foreach ($filter_context as $filter){
-					$condition = ConditionFactory::create_from_object_or_array($data_source->get_workbench(), $filter);
+					$condition = ConditionFactory::create_from_object_or_array($exface, $filter);
 					$data_source->get_workbench()->context()->get_scope_application()->get_filter_context()->add_condition($condition);
 				}
 			}
