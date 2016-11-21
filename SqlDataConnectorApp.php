@@ -3,8 +3,14 @@
 use exface\Core\CommonLogic\Model\Object;
 use exface\Core\Exceptions\ActionRuntimeException;
 use exface\Core\CommonLogic\NameResolver;
+use exface\Core\Exceptions\DataConnectionError;
+use exface\Core\Factories\ConfigurationFactory;
+use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 
 class SqlDataConnectorApp extends \exface\Core\CommonLogic\AbstractApp {
+	const FOLDER_WITH_MODEL_SOURCE_SQL = 'ModelSource';
+	const FOLDER_WITH_MODEL_SOURCE_SQL_UPDATES = 'updates';
+	
 	private $data_types = NULL;
 	private $explorer = NULL;
 	
@@ -39,6 +45,69 @@ class SqlDataConnectorApp extends \exface\Core\CommonLogic\AbstractApp {
 	
 	public function set_explorer(AbstractSQLExplorer $explorer) {
 		$this->explorer = $explorer;
+		return $this;
+	}
+	
+	public function install(){
+		return $this->perform_model_source_update();
+	}
+	
+	private function perform_model_source_update(){
+		// This only works if the connector used by the model loader is an SQL connector
+		if (!($this->get_workbench()->model()->get_model_loader()->get_data_connection() instanceof SqlDataConnectorInterface)) return;
+		
+		$updates_folder = __DIR__ . DIRECTORY_SEPARATOR . $this::FOLDER_WITH_MODEL_SOURCE_SQL . DIRECTORY_SEPARATOR . $this::FOLDER_WITH_MODEL_SOURCE_SQL_UPDATES;
+		$id_installed = $this->get_config()->get_option('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID');
+		$updates_installed = array();
+		$updates_failed = array();
+		
+		foreach (scandir($updates_folder, SCANDIR_SORT_ASCENDING) as $file){
+			if ($file == '.' || $file == '..') continue;
+			$id = intval(substr($file, 0, 4));
+			if ($id > $id_installed){
+				$sql = file_get_contents($updates_folder . DIRECTORY_SEPARATOR . $file);
+				$sql = trim(preg_replace('/\s+/', ' ', $sql));
+				try {
+					foreach (explode(';', $sql) as $statement){
+						if ($statement){
+							$this->get_workbench()->model()->get_model_loader()->get_data_connection()->query($statement);
+						}
+					}
+					$updates_installed[] = $id;
+				} catch (DataConnectionError $e){
+					$updates_failed[] = $id;
+				}
+			}
+			
+		}
+		// Save the last id in order to skip installed ones next time
+		$this->set_last_model_source_update_id($id);
+			
+		$result = '';
+		if (count($updates_installed) > 0){
+			$result .= 'Installed ' . count($updates_installed) . ' model source updates';
+		}
+		if (count($updates_failed) > 0){
+			$result .= ' (' . count($updates_failed) . ' updates failed)';
+		}
+		
+		return $result;
+	}
+	
+	private function set_last_model_source_update_id($id){
+		$exface = $this->get_workbench();
+		$filename = $this->get_workbench()->filemanager()->get_path_to_config_folder() . DIRECTORY_SEPARATOR . $this->get_config_file_name();
+		
+		// Load the installation specific config file
+		$config = ConfigurationFactory::create($exface);
+		if (file_exists($filename)){
+			$config->load_config_file($filename);
+		} 
+		// Overwrite the option
+		$config->set_option('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID', $id);
+		// Save the file or create one if there was no installation specific config before
+		file_put_contents($filename, $config->export_uxon_object()->to_json(true));
+		
 		return $this;
 	}
 }

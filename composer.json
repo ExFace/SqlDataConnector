@@ -1,18 +1,27 @@
 {
-	"name" : "ExFace/SqlDataConnector",
-	"description" : "Data connector for SQL databases for the ExFace business web application plattform",
-	"type" : "library",
-	"license" : "GPL-3.0+",
-	"authors" : [{
-			"name" : "Andrej Kabachnik",
-			"email" : "kabachnik@gmail.com",
-			"role" : "Creator"
-		}
-	],
-	"support" : {
-		"issues" : "https://github.com/exface/SqlDataConnector/issues"
-	},
-	"require" : {
-		"exface/core" : "~0.1"
-	}
+    "name": "ExFace/SqlDataConnector",
+    "description": "Data connector for SQL databases for the ExFace business web application plattform",
+    "type": "library",
+    "license": "GPL-3.0+",
+    "authors": [
+        {
+            "name": "Andrej Kabachnik",
+            "email": "kabachnik@gmail.com",
+            "role": "Creator"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/exface/SqlDataConnector/issues"
+    },
+    "require": {
+        "exface/core": "~0.1"
+    },
+    "extra": {
+        "app": {
+            "app_uid": "0x11e6affb715baea58943e4b318306b9a",
+            "app_alias": "exface.SqlDataConnector",
+            "model_md5": "c993957d8015f009e09786a23b10dbc0",
+            "model_timestamp": "2016-11-21 15:01:33"
+        }
+    }
 }
