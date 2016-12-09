@@ -62,7 +62,6 @@ class SqlModelLoader implements ModelLoaderInterface {
 			$object->set_app_id($row['app_oid']);
 			$object->set_namespace($row['app_alias']);
 			$object->set_short_description($row['short_description']);
-			$object->set_default_editor_uxon(UxonObject::from_json($row['default_editor_uxon']));
 			if ($row['has_behaviors']) {
 				$load_behaviors = true;
 			}
@@ -80,6 +79,11 @@ class SqlModelLoader implements ModelLoaderInterface {
 			if ($data_address_properties = UxonObject::from_json($row['data_address_properties'])){
 				if (!$data_address_properties->is_empty()){
 					$object->set_data_address_properties($data_address_properties);
+				}
+			}
+			if ($default_editor_uxon = UxonObject::from_json($row['default_editor_uxon'])){
+				if (!$default_editor_uxon->is_empty()){
+					$object->set_default_editor_uxon($default_editor_uxon);
 				}
 			}
 		} else {
