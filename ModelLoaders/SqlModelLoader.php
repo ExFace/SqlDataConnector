@@ -243,6 +243,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 		$attr->set_formula($row['attribute_formula']);
 		$attr->set_default_sorter_dir($row['default_sorter_dir']);
 		$attr->set_short_description($row['attribute_short_description']);
+		$attr->set_default_aggregate_function($row['default_aggregate_function']);
 	
 		// Create the UXON for the default editor widget
 		// Start with the data type widget
