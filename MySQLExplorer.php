@@ -10,7 +10,7 @@ class MySQLExplorer extends AbstractSQLExplorer {
 				";
 			
 		// TODO check if it is the right data connector
-		$columns_array = $meta_object->get_data_connection()->query($columns_sql);
+		$columns_array = $meta_object->get_data_connection()->run_sql($columns_sql)->get_result_array();
 		$rows = array();
 		foreach ($columns_array as $col){		
 			$rows[] = array(

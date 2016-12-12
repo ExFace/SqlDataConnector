@@ -70,7 +70,7 @@ class SqlDataConnectorApp extends \exface\Core\CommonLogic\AbstractApp {
 				try {
 					foreach (explode(';', $sql) as $statement){
 						if ($statement){
-							$this->get_workbench()->model()->get_model_loader()->get_data_connection()->query($statement);
+							$this->get_workbench()->model()->get_model_loader()->get_data_connection()->run_sql($statement);
 						}
 					}
 					$updates_installed[] = $id;

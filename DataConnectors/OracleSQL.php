@@ -2,6 +2,8 @@
 
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\Core\Exceptions\DataConnectionError;
+use exface\Core\Interfaces\DataSources\DataQueryInterface;
+use exface\SqlDataConnector\SqlDataQuery;
 
 /**
  * Datbase API object of OracleSQL
@@ -35,7 +37,9 @@ class OracleSQL extends AbstractSqlConnector {
 		} else {
 			$this->set_current_connection($conn);
 			// Set default date and time formats to ensure compatibility with ExFace
-			$this->perform_query("ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS' NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS' NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'", array('return_raw_result' => true));
+			$setup_query = new SqlDataQuery();
+			$setup_query->set_sql("ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS' NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS' NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'");
+			$this->perform_query($setup_query);
 		}
 	}
 	
@@ -52,9 +56,15 @@ class OracleSQL extends AbstractSqlConnector {
 	 * 
 	 * {@inheritDoc}
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::perform_query()
+	 * 
+	 * @param SqlDataQuery $query
 	 */
-	protected function perform_query($sql, $options = null) {
-		$return_raw_result = $options['return_raw_result'];
+	protected function perform_query(DataQueryInterface $query) {
+		if (!($query instanceof SqlDataQuery)){
+			throw new DataConnectionError('The Oracle SQL data connector expects an SqlDataQuery as input: "' . get_class($query) . '" given instead!');
+		}
+		
+		$sql = $query->get_sql();
 		if (is_null($this->get_current_connection()) || !is_resource($this->get_current_connection())) {
 			$this->connect();
 		}
@@ -81,15 +91,11 @@ class OracleSQL extends AbstractSqlConnector {
 			$this->rows_affected_by_last_query = oci_num_rows($result);
 			if (!$ex) {
 				throw new DataConnectionError("Execution of a query to the database failed - " . $this->get_last_error());
+				return $query;
 			} else {
-				
-				if ($return_raw_result){
-					return $result;
-				} else {
-					$array = $this->make_array($result);
-					oci_free_statement($result);
-					return $array;
-				}
+				$query->set_result_array($this->make_array($result));
+				oci_free_statement($result);
+				return $query;
 			}
 		}
 	}
@@ -112,20 +118,17 @@ class OracleSQL extends AbstractSqlConnector {
 	}
 
 	/**
-	* @name:  make_array
-	* @desc:  turns a recordset into a multidimensional array
-	* @return: an array of row arrays from recordset, or empty array
-	*			 if the recordset was empty, returns false if no recordset
-	*			 was passed
-	* @param: $rs Recordset to be packaged into an array
-	*/
-	function make_array($rs=''){
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::make_array()
+	 */
+	public function make_array($rs){
 		if(!$rs) return array();
-		$rsArray = array();
+		$array = array();
 		while ($row = @ oci_fetch_assoc($rs)) {
-			$rsArray[] = $row;
+			$array[] = $row;
 		}
-		return $rsArray;
+		return $array;
 	}
 	
 	/**
@@ -168,6 +171,6 @@ class OracleSQL extends AbstractSqlConnector {
 	 */
 	public function transaction_is_started(){
 		return false;
-	}	  
+	}	
 }
 ?>

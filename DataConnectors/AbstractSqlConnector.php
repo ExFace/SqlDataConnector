@@ -2,6 +2,7 @@
 
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
+use exface\SqlDataConnector\SqlDataQuery;
 
 /** 
  * Datbase API object of Microsoft SQL Server
@@ -66,5 +67,22 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 		return $this;
 	} 
 	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface::run_sql()
+	 */
+	public function run_sql($string){
+		$query = new SqlDataQuery();
+		$query->set_sql($string);
+		return $this->query($query);
+	}
+	
+	/**
+	 * 
+	 * @param resource $result
+	 * @return array
+	 */
+	abstract public function make_array($result);
 }
 ?>

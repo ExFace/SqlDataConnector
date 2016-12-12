@@ -236,7 +236,7 @@ class MySQL extends AbstractSQL {
 		if (!$where) throw new QueryBuilderException('Cannot perform update on all objects "' . $this->main_object->get_alias() . '"! Forbidden operation!');
 		
 		$query = 'DELETE FROM ' . $this->get_main_object()->get_data_address() . str_replace($this->get_main_object()->get_alias().'.', '', $where);
-		$data_connection->query($query);
+		$data_connection->run_sql($query);
 		return $data_connection->get_affected_rows_count();;
 	}
 }

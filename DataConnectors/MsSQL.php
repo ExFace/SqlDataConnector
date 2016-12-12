@@ -2,6 +2,8 @@
 
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\Core\Exceptions\DataConnectionError;
+use exface\Core\Interfaces\DataSources\DataQueryInterface;
+use exface\SqlDataConnector\SqlDataQuery;
 
 /** 
  * Datbase API object of Microsoft SQL Server
@@ -50,16 +52,23 @@ class MsSQL extends AbstractSqlConnector {
 	 * 
 	 * {@inheritDoc}
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::perform_query()
+	 * 
+	 * @param SqlDataQuery $query
 	 */
-	protected function perform_query($sql, $options = null) {
+	protected function perform_query(DataQueryInterface $query) {
+		if (!($query instanceof SqlDataQuery)){
+			throw new DataConnectionError('The Microsoft SQL Server data connector expects an SqlDataQuery as input: "' . get_class($query) . '" given instead!');
+		}
+		
 		if (is_null($this->get_current_connection()) || !is_resource($this->get_current_connection())) {
 			$this->connect();
 		}
 		
-		if (!$result = sqlsrv_query($this->get_current_connection(), $sql)) {
+		if (!$result = sqlsrv_query($this->get_current_connection(), $query->get_sql())) {
 			throw new DataConnectionError("Execution of a query to the database failed - " . $this->get_last_error());
 		} else {
-			return $this->make_array($result);
+			$query->set_result_array($this->make_array($result));
+			return $query;
 		}
 	}
 
@@ -87,19 +96,17 @@ class MsSQL extends AbstractSqlConnector {
 	}
 
 	/**
-	* Turns a recordset into a multidimensional array
-	* @return: an array of row arrays from recordset, or empty array
-	*			 if the recordset was empty, returns false if no recordset
-	*			 was passed
-	* @param: $rs Recordset to be packaged into an array
-	*/
-	function make_array($rs=''){
-		if(!$rs) return false;
-		$rsArray = array();
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::make_array()
+	 */
+	public function make_array($rs){
+		if(!$rs) return array();
+		$array = array();
 		while ($row = sqlsrv_fetch_array($rs, SQLSRV_FETCH_ASSOC)) {
-			$rsArray[] = $row;
+			$array[] = $row;
 		}
-		return $rsArray;
+		return $array;
 	}  
 	
 	public function transaction_start(){

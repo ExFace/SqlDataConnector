@@ -2,6 +2,8 @@
 
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\Core\Exceptions\DataConnectionError;
+use exface\Core\Interfaces\DataSources\DataQueryInterface;
+use exface\SqlDataConnector\SqlDataQuery;
 
 /** 
  * Data source connector for MySQL databases 
@@ -43,11 +45,6 @@ class MySQL extends AbstractSqlConnector {
 		if (!$conn) {
 			throw new DataConnectionError('Failed to create the database connection for "' . $this->get_alias_with_namespace() . '"!');
 		} else {
-			/*$dbase = trim($dbase,'`'); // remove the `` chars
-			if (!@ mysqli_select_db($dbase, $conn)) {
-				throw new DataConnectionError("Failed to select the database '" . $dbase . "'!");
-				exit;
-			}*/
 			mysqli_query($conn, "{$connection_method} {$charset}");
 				if (function_exists('mysqli_set_charset')) {
 					 mysqli_set_charset($conn, $this->get_config_array()['charset']);
@@ -71,16 +68,23 @@ class MySQL extends AbstractSqlConnector {
 	 * 
 	 * {@inheritDoc}
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::perform_query()
+	 * @param SqlDataQuery $query
 	 */
-	protected function perform_query($sql, $options = null) {
+	protected function perform_query(DataQueryInterface $query) {
+		if (!($query instanceof SqlDataQuery)){
+			throw new DataConnectionError('The MySQL data connector expects an SqlDataQuery as input: "' . get_class($query) . '" given instead!');
+		}
+		
 		if (is_null($this->get_current_connection()) || !is_resource($this->get_current_connection())) {
 			$this->connect();
 		}
 		
-		if (!$result = mysqli_query($this->get_current_connection(), $sql)) {
-			throw new DataConnectionError("Execution of a query to the database failed - " . $this->get_last_error(), $sql);
+		if (!$result = mysqli_query($this->get_current_connection(), $query->get_sql())) {
+			throw new DataConnectionError("Execution of a query to the database failed - " . $this->get_last_error());
+			return $query;
 		} else {
-			return $this->make_array($result);
+			$query->set_result_array($result);
+			return $query;
 		}
 	}
 	
@@ -98,20 +102,17 @@ class MySQL extends AbstractSqlConnector {
 	}
 	
 	/**
-	* @name:  make_array
-	* @desc:  turns a recordset into a multidimensional array
-	* @return: an array of row arrays from recordset, or empty array
-	*			 if the recordset was empty, returns false if no recordset
-	*			 was passed
-	* @param: $rs Recordset to be packaged into an array
-	*/
-	function make_array($rs=''){
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::make_array()
+	 */
+	public function make_array($rs){
 		if(!($rs instanceof \mysqli_result)) return array();
-		$rsArray = array();
+		$array = array();
 		while ($row = mysqli_fetch_assoc($rs)) {
-			$rsArray[] = $row;
+			$array[] = $row;
 		}
-		return $rsArray;
+		return $array;
 	}
 	
 	public function transaction_start(){

@@ -31,7 +31,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 		} else {
 			$q_where = 'a.app_alias = "' . $object->get_namespace() . '" AND o.object_alias = "' . $object->get_alias() . '"';
 		}
-		$res = $this->get_data_connection()->query('
+		$query = $this->get_data_connection()->run_sql('
 				SELECT
 					' . $this->generate_sql_uuid_selector('o.oid') . ' as oid,
 					' . $this->generate_sql_uuid_selector('o.app_oid') . ' as app_oid,
@@ -51,7 +51,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 					LEFT JOIN exf_app a ON o.app_oid = a.oid 
 					LEFT JOIN exf_data_source ds ON o.data_source_oid = ds.oid
 				WHERE ' . $q_where);
-		if ($res){
+		if ($res = $query->get_result_array()){
 			$row = $res[0];
 			
 			$object->set_id($row['oid']);
@@ -91,7 +91,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 		}
 		
 		// select all attributes for this object
-		$res = $this->get_data_connection()->query('
+		$query = $this->get_data_connection()->run_sql('
 				SELECT
 					a.*,
 					' . $this->generate_sql_uuid_selector('a.oid') . ' as oid,
@@ -104,7 +104,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 					o.object_name AS rev_relation_name
 				FROM exf_attribute a LEFT JOIN exf_object o ON a.object_oid = o.oid LEFT JOIN exf_data_type d ON d.oid = a.data_type_oid
 				WHERE a.object_oid = ' . $object->get_id() . ' OR a.related_object_oid = ' . $object->get_id());
-		if($res){
+		if($res = $query->get_result_array()){
 			// use a for here instead of foreach because we want to extend the array from within the loop on some occasions
 			$l = count($res);
 			for ($i = 0; $i < $l; $i++){
@@ -205,10 +205,10 @@ class SqlModelLoader implements ModelLoaderInterface {
 		
 		// Load behaviors if needed
 		if ($load_behaviors){
-			$res = $this->get_data_connection()->query('
+			$query = $this->get_data_connection()->run_sql('
 				SELECT * FROM exf_object_behaviors WHERE object_oid = ' . $object->get_id()
 			);
-			if ($res){
+			if ($res = $query->get_result_array()){
 				foreach ($res as $row){
 					$behavior = BehaviorFactory::create_from_uxon($object, $row['behavior'], UxonObject::from_json($row['config_uxon']));
 					$object->get_behaviors()->add($behavior);
@@ -284,7 +284,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 				$select_user_credentials = ', uc.data_connector_config AS user_connector_config';
 			}
 			
-			$query = '
+			$sql = '
 				SELECT 
 					ds.default_query_builder, 
 					ds.read_only_flag AS data_source_read_only, 
@@ -296,7 +296,8 @@ class SqlModelLoader implements ModelLoaderInterface {
 					dc.filter_context_uxon' . $select_user_credentials . ' 
 				FROM exf_data_source ds LEFT JOIN exf_data_connection dc ON ' . $join_on . $join_user_credentials . ' 
 				WHERE ds.oid = ' . $data_source->get_id();
-			$ds = $this->get_data_connection()->query($query);
+			$query = $this->get_data_connection()->run_sql($sql);
+			$ds = $query->get_result_array();
 			if (count($ds) > 1){
 				throw new DataSourceError('Multiple user credentials found for data connection "'. $data_connection_id_or_alias . '" and user "' . $user_name . '"!');
 			} elseif (count($ds) != 1){
