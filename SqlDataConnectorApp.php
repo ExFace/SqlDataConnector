@@ -74,7 +74,7 @@ class SqlDataConnectorApp extends \exface\Core\CommonLogic\AbstractApp {
 						}
 					}
 					$updates_installed[] = $id;
-				} catch (DataConnectionError $e){
+				} catch (\Exception $e){
 					$updates_failed[] = $id;
 				}
 			}
