@@ -3,7 +3,6 @@
 use exface\Core\CommonLogic\Model\Object;
 use exface\Core\Exceptions\ActionRuntimeException;
 use exface\Core\CommonLogic\NameResolver;
-use exface\Core\Exceptions\DataConnectionError;
 use exface\Core\Factories\ConfigurationFactory;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 

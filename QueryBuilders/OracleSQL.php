@@ -85,6 +85,9 @@ class OracleSQL extends AbstractSQL {
 					if ($group_by
 					&& !$qpart->get_aggregate_function()
 					&& !$this->get_aggregation($qpart->get_alias())){
+						// IDEA at this point, we could use the default aggregate function of the attributes. However it is probably a good
+						// idea to set the default aggregator somewhere in the qpart code, not in the query builders. If we set the aggregator
+						// to the default, this place will pass without a problem.
 						continue;
 					}
 					// also skip selects based on custom sql substatements if not being grouped over
@@ -138,6 +141,9 @@ class OracleSQL extends AbstractSQL {
 				if ($qpart->get_first_relation() && $qpart->get_first_relation()->get_type() == '1n'){
 					// If the first relation needed for the select is a reverse one, make sure, the subselect will reference the core query directly
 					$enrichment_select .= ', ' . $this->build_sql_select($qpart, 'EXFCOREQ');
+				} elseif (!$qpart->get_first_relation() && !$qpart->get_aggregate_function()){ 
+					// If the attribute belongs to the main object and does not have an aggregate function, skip it - oracle cannot deal with it
+					continue;
 				} else {
 					// Otherwise the selects can rely on the joins
 					$enrichment_select .= ', ' . $this->build_sql_select($qpart);
