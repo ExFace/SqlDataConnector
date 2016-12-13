@@ -83,7 +83,7 @@ class MySQL extends AbstractSqlConnector {
 			throw new DataConnectionError("Execution of a query to the database failed - " . $this->get_last_error());
 			return $query;
 		} else {
-			$query->set_result_array($result);
+			$query->set_result_array($this->make_array($result));
 			return $query;
 		}
 	}

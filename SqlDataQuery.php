@@ -5,7 +5,7 @@ use exface\Core\CommonLogic\AbstractDataQuery;
 class SqlDataQuery extends AbstractDataQuery {
 	
 	private $sql = '';
-	private $result_array = null;
+	private $result_array = array();
 	private $result_resource = null;
 	
 	/**
