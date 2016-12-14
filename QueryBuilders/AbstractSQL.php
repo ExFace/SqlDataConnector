@@ -801,7 +801,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			if ($comparator != EXF_COMPARATOR_IN){
 				$value = $data_type::parse($value);
 			} else {
-				$values = explode(',', $value);
+				$values = explode(',', trim($value, ','));
 				foreach ($values as $nr => $val){
 					$values[$nr] = $data_type::parse($val);
 				}
@@ -810,7 +810,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		} catch (DataTypeValidationError $e) {
 			// TODO Not sure, if it is wise to skip invalid filters. Perhaps we should rethrow the exception here. This would, howerver
 			// cause error on bad prefills, etc. Maybe throw a warning, once the separation of errors and warnings is implemented
-			$e->rethrow();
+			throw $e;
 			return '';
 		}
 		
