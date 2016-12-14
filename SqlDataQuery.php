@@ -26,24 +26,6 @@ class SqlDataQuery extends AbstractDataQuery {
 		return $this;
 	}  
 	
-	/**
-	 * 
-	 * @return boolean
-	 */
-	public function get_return_raw_result() {
-		return $this->return_raw_result;
-	}
-	
-	/**
-	 * 
-	 * @param boolean $value
-	 * @return \exface\SqlDataConnector\SqlDataQuery
-	 */
-	public function set_return_raw_result($value) {
-		$this->return_raw_result = $value ? true : false;
-		return $this;
-	} 
-	
 	public function get_result_array() {
 		return $this->result_array;
 	}
@@ -60,6 +42,26 @@ class SqlDataQuery extends AbstractDataQuery {
 	public function set_result_resource($value) {
 		$this->result_resource = $value;
 		return $this;
-	}      
+	}     
+	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\Core\CommonLogic\AbstractDataQuery::import_string()
+	 */
+	public function import_string($string){
+		$this->set_sql($string);
+	}
+	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\Core\CommonLogic\AbstractDataQuery::export_uxon_object()
+	 */
+	public function export_uxon_object(){
+		$uxon = parent::export_uxon_object();
+		$uxon->set_property('sql', $this->get_sql());
+		return $uxon;
+	}
 	
 }
