@@ -1,15 +1,14 @@
 <?php namespace exface\SqlDataConnector;
 
 use exface\Core\CommonLogic\AbstractDataQuery;
+use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 
 class SqlDataQuery extends AbstractDataQuery {
 	
 	private $sql = '';
-	private $result_array = array();
+	private $result_array = null;
 	private $result_resource = null;
-	private $affected_row_counter = 0;
-	private $last_insert_id = null;
-	private $last_insert_ids = array();
+	private $connection = null;
 	
 	/**
 	 * 
@@ -30,10 +29,13 @@ class SqlDataQuery extends AbstractDataQuery {
 	}  
 	
 	public function get_result_array() {
+		if (is_null($this->result_array)){
+			return $this->get_connection()->make_array($this);
+		}
 		return $this->result_array;
 	}
 	
-	public function set_result_array($value) {
+	public function set_result_array(array $value) {
 		$this->result_array = $value;
 		return $this;
 	}
@@ -73,25 +75,27 @@ class SqlDataQuery extends AbstractDataQuery {
 	 * @see \exface\Core\Interfaces\DataSources\DataQueryInterface::count_affected_rows()
 	 */
 	public function count_affected_rows(){
-		return $this->affected_row_counter;
-	}
-	
-	/**
-	 * 
-	 * @param integer $integer
-	 */
-	public function set_affected_row_counter($integer){
-		$this->affected_row_counter = intval($integer);
-		return $this;
+		return $this->get_connection()->get_affected_rows_count($this);
 	}
 	
 	public function get_last_insert_id() {
-		return $this->last_insert_id;
+		return $this->get_connection()->get_insert_id($this);
+	} 
+	
+	/**
+	 * 
+	 * @return \exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface
+	 */
+	public function get_connection() {
+		return $this->connection;
 	}
 	
-	public function set_last_insert_id($value) {
-		$this->last_insert_id = $value > 0 ? $value : null;
+	public function set_connection(SqlDataConnectorInterface $value) {
+		$this->connection = $value;
 		return $this;
-	}  
+	}	
 	
+	public function free_result(){
+		$this->get_connection()->free_result($this);
+	}
 }

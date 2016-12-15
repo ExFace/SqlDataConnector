@@ -2,7 +2,6 @@
 
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\Core\Exceptions\DataConnectionError;
-use exface\Core\Interfaces\DataSources\DataQueryInterface;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 
@@ -71,22 +70,12 @@ class MySQL extends AbstractSqlConnector {
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::perform_query()
 	 * @param SqlDataQuery $query
 	 */
-	protected function perform_query(DataQueryInterface $query) {
-		if (!($query instanceof SqlDataQuery)){
-			throw new DataConnectionError('The MySQL data connector expects an SqlDataQuery as input: "' . get_class($query) . '" given instead!');
-		}
-		
-		if (is_null($this->get_current_connection()) || !is_resource($this->get_current_connection())) {
-			$this->connect();
-		}
-		
+	protected function perform_query_sql(SqlDataQuery $query) {		
 		if (!$result = mysqli_query($this->get_current_connection(), $query->get_sql())) {
 			throw new DataQueryFailedError($query, "SQL query failed: " . $this->get_last_error());
 			return $query;
 		} else {
-			$query->set_result_array($this->make_array($result));
-			$query->set_affected_row_counter(mysqli_affected_rows($this->get_current_connection()));
-			$query->set_last_insert_id(mysqli_insert_id($this->get_current_connection()));
+			$query->set_result_resource($result);
 			return $query;
 		}
 	}
@@ -100,13 +89,22 @@ class MySQL extends AbstractSqlConnector {
 	 * {@inheritDoc}
 	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::make_array()
 	 */
-	protected function make_array($rs){
+	public function make_array(SqlDataQuery $query){
+		$rs = $query->get_result_resource();
 		if(!($rs instanceof \mysqli_result)) return array();
 		$array = array();
 		while ($row = mysqli_fetch_assoc($rs)) {
 			$array[] = $row;
 		}
 		return $array;
+	}
+	
+	public function get_insert_id(SqlDataQuery $query){
+		return mysqli_insert_id($this->get_current_connection());
+	}
+	
+	public function get_affected_rows_count(SqlDataQuery $query){
+		return mysqli_affected_rows($this->get_current_connection());
 	}
 	
 	public function transaction_start(){
@@ -119,6 +117,10 @@ class MySQL extends AbstractSqlConnector {
 	
 	public function transaction_rollback(){
 		// TODO after migrating to mysqli
+	}
+	
+	public function free_result(SqlDataQuery $query){
+		mysqli_free_result($query->get_result_resource());
 	}
 }
 ?>

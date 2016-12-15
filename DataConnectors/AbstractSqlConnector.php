@@ -3,10 +3,11 @@
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\SqlDataConnector\SqlDataQuery;
+use exface\Core\Interfaces\DataSources\DataQueryInterface;
 
-/** 
- * Datbase API object of Microsoft SQL Server
- * Written by Andrej Kabachnik, 2015
+/**
+ * 
+ * @author Andrej Kabachnik
  *
  */
 abstract class AbstractSqlConnector extends AbstractDataConnector implements SqlDataConnectorInterface {
@@ -38,6 +39,16 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 		$this->autocommit = $value;
 		return $this;
 	}
+	
+	final protected function perform_query(DataQueryInterface $query){
+		if (is_null($this->get_current_connection()) || !is_resource($this->get_current_connection())) {
+			$this->connect();
+		}
+		$query->set_connection($this);
+		return $this->perform_query_sql($query);
+	}
+	
+	abstract protected function perform_query_sql(SqlDataQuery $query);
 	
 	public function get_current_connection() {
 		return $this->current_connection;
@@ -77,12 +88,6 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 		$query->set_sql($string);
 		return $this->query($query);
 	}
-	
-	/**
-	 * 
-	 * @param resource $result
-	 * @return array
-	 */
-	abstract protected function make_array($result);
+
 }
 ?>

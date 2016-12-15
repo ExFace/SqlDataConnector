@@ -2,8 +2,8 @@
 
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\Core\Exceptions\DataConnectionError;
-use exface\Core\Interfaces\DataSources\DataQueryInterface;
 use exface\SqlDataConnector\SqlDataQuery;
+use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 
 /** 
  * Datbase API object of Microsoft SQL Server
@@ -55,26 +55,18 @@ class MsSQL extends AbstractSqlConnector {
 	 * 
 	 * @param SqlDataQuery $query
 	 */
-	protected function perform_query(DataQueryInterface $query) {
-		if (!($query instanceof SqlDataQuery)){
-			throw new DataConnectionError('The Microsoft SQL Server data connector expects an SqlDataQuery as input: "' . get_class($query) . '" given instead!');
-		}
-		
-		if (is_null($this->get_current_connection()) || !is_resource($this->get_current_connection())) {
-			$this->connect();
-		}
-		
+	protected function perform_query_sql(SqlDataQuery $query) {		
 		if (!$result = sqlsrv_query($this->get_current_connection(), $query->get_sql())) {
-			throw new DataConnectionError("Execution of a query to the database failed - " . $this->get_last_error());
+			throw new DataQueryFailedError($query, "SQL query failed: " . $this->get_last_error());
 		} else {
-			$query->set_result_array($this->make_array($result));
+			$query->set_result_resource($result);
 			return $query;
 		}
 	}
 
-	function get_insert_id() {
+	function get_insert_id(SqlDataQuery $query) {
 		$id = ""; 
-		$rs = mssql_query("SELECT @@identity AS id"); 
+		$rs = sqlsrv_query("SELECT @@identity AS id"); 
 		if ($row = mssql_fetch_row($rs)) { 
 			$id = trim($row[0]); 
 		} 
@@ -82,16 +74,16 @@ class MsSQL extends AbstractSqlConnector {
 		return $id; 
 	}
 	
-	function get_affected_rows_count() {
-		return mssql_rows_affected($this->get_current_connection());
+	function get_affected_rows_count(SqlDataQuery $query) {
+		return sqlsrv_rows_affected($this->get_current_connection());
 	}
 
-	function get_last_error() {
+	protected function get_last_error() {
 		$errors = $this->get_errors();
 		return $errors[0]['message'];
 	}
 	
-	function get_errors() {
+	protected function get_errors() {
 			return sqlsrv_errors();
 	}
 
@@ -100,7 +92,8 @@ class MsSQL extends AbstractSqlConnector {
 	 * {@inheritDoc}
 	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::make_array()
 	 */
-	protected function make_array($rs){
+	public function make_array(SqlDataQuery $query){
+		$rs = $query->get_result_resource();
 		if(!$rs) return array();
 		$array = array();
 		while ($row = sqlsrv_fetch_array($rs, SQLSRV_FETCH_ASSOC)) {
@@ -149,6 +142,10 @@ class MsSQL extends AbstractSqlConnector {
 			$this->set_transaction_started(false);
 		}
 		return $this;
-	}	  
+	}	
+	
+	public function free_result(SqlDataQuery $query){
+		sqlsrv_free_stmt($query->get_result_resource());
+	}
 }
 ?>
