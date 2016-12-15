@@ -100,7 +100,7 @@ class MsSQL extends AbstractSqlConnector {
 	 * {@inheritDoc}
 	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::make_array()
 	 */
-	public function make_array($rs){
+	protected function make_array($rs){
 		if(!$rs) return array();
 		$array = array();
 		while ($row = sqlsrv_fetch_array($rs, SQLSRV_FETCH_ASSOC)) {

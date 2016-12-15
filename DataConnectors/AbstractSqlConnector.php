@@ -83,6 +83,6 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 	 * @param resource $result
 	 * @return array
 	 */
-	abstract public function make_array($result);
+	abstract protected function make_array($result);
 }
 ?>

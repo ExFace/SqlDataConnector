@@ -122,7 +122,7 @@ class OracleSQL extends AbstractSqlConnector {
 	 * {@inheritDoc}
 	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::make_array()
 	 */
-	public function make_array($rs){
+	protected function make_array($rs){
 		if(!$rs) return array();
 		$array = array();
 		while ($row = @ oci_fetch_assoc($rs)) {

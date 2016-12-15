@@ -4,6 +4,7 @@ use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\Core\Exceptions\DataConnectionError;
 use exface\Core\Interfaces\DataSources\DataQueryInterface;
 use exface\SqlDataConnector\SqlDataQuery;
+use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 
 /** 
  * Data source connector for MySQL databases 
@@ -80,25 +81,18 @@ class MySQL extends AbstractSqlConnector {
 		}
 		
 		if (!$result = mysqli_query($this->get_current_connection(), $query->get_sql())) {
-			throw new DataConnectionError("Execution of a query to the database failed - " . $this->get_last_error());
+			throw new DataQueryFailedError($query, "SQL query failed: " . $this->get_last_error());
 			return $query;
 		} else {
 			$query->set_result_array($this->make_array($result));
+			$query->set_affected_row_counter(mysqli_affected_rows($this->get_current_connection()));
+			$query->set_last_insert_id(mysqli_insert_id($this->get_current_connection()));
 			return $query;
 		}
 	}
-	
-	function get_insert_id() {
-		return mysqli_insert_id($this->get_current_connection());
-	}
 
-
-	function get_affected_rows_count() {
-		return mysqli_affected_rows($this->get_current_connection());
-	}
-
-	function get_last_error() {
-		return mysqli_error($this->get_current_connection());
+	protected function get_last_error() {
+		return mysqli_error($this->get_current_connection()) . ' (Error ' . mysqli_errno($this->get_current_connection() . ')');
 	}
 	
 	/**
@@ -106,7 +100,7 @@ class MySQL extends AbstractSqlConnector {
 	 * {@inheritDoc}
 	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::make_array()
 	 */
-	public function make_array($rs){
+	protected function make_array($rs){
 		if(!($rs instanceof \mysqli_result)) return array();
 		$array = array();
 		while ($row = mysqli_fetch_assoc($rs)) {
