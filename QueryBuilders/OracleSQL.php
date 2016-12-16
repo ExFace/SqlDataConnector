@@ -141,8 +141,8 @@ class OracleSQL extends AbstractSQL {
 				if ($qpart->get_first_relation() && $qpart->get_first_relation()->get_type() == '1n'){
 					// If the first relation needed for the select is a reverse one, make sure, the subselect will reference the core query directly
 					$enrichment_select .= ', ' . $this->build_sql_select($qpart, 'EXFCOREQ');
-				} elseif (!$qpart->get_first_relation() && !$qpart->get_aggregate_function()){ 
-					// If the attribute belongs to the main object and does not have an aggregate function, skip it - oracle cannot deal with it
+				} elseif ($group_by && !$qpart->get_first_relation() && !$qpart->get_aggregate_function()){ 
+					// If in a GROUP BY the attribute belongs to the main object and does not have an aggregate function, skip it - oracle cannot deal with it
 					continue;
 				} else {
 					// Otherwise the selects can rely on the joins
