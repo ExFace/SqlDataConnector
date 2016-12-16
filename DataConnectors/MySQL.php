@@ -25,7 +25,6 @@ class MySQL extends AbstractSqlConnector {
 	 */
 	protected function perform_connect() {
 		$safe_count = 0;
-		$connect_error = array();
 		$conn = null;
 		
 		// Make mysqli produce exceptions instead of errors
@@ -39,7 +38,7 @@ class MySQL extends AbstractSqlConnector {
 			 		$conn = mysqli_connect($this->get_host(), $this->get_user(), $this->get_password(), $this->get_dbase());
 				}
 			} catch (\mysqli_sql_exception $e) {
-				$connect_error[] = $e->getMessage();
+				// Do nothing, try again later
 			}
 			if(!$conn) {
 				sleep(1);
@@ -137,7 +136,7 @@ class MySQL extends AbstractSqlConnector {
 		try {
 			return mysqli_begin_transaction ($this->get_current_connection());
 		} catch (\mysqli_sql_exception $e){
-			throw new DataConnectionTransactionStartError($this, "Cannot start transaction: " . $e->getMessage(), '', $e);
+			throw new DataConnectionTransactionStartError($this, "Cannot start transaction: " . $e->getMessage(), '6T2T2JM', $e);
 		}
 	}
 	
@@ -145,7 +144,7 @@ class MySQL extends AbstractSqlConnector {
 		try {
 			return mysqli_commit($this->get_current_connection());
 		} catch (\mysqli_sql_exception $e){
-			throw new DataConnectionCommitFailedError($this, "Commit failed: " . $e->getMessage(), '', $e);
+			throw new DataConnectionCommitFailedError($this, "Commit failed: " . $e->getMessage(), '6T2T2O9', $e);
 		}
 	}
 	
@@ -153,7 +152,7 @@ class MySQL extends AbstractSqlConnector {
 		try {
 			return mysqli_rollback($this->get_current_connection());
 		} catch (\mysqli_sql_exception $e){
-			throw new DataConnectionRollbackFailedError($this, "Rollback failed: " . $e->getMessage(), '', $e);
+			throw new DataConnectionRollbackFailedError($this, "Rollback failed: " . $e->getMessage(), '6T2T2S1', $e);
 		}
 	}
 	
