@@ -1,7 +1,9 @@
 <?php namespace exface\SqlDataConnector\DataConnectors;
 
 use exface\Core\CommonLogic\AbstractDataConnector;
-use exface\Core\Exceptions\DataConnectionError;
+use exface\Core\Exceptions\DataSources\DataConnectionFailedError;
+use exface\Core\Exceptions\DataSources\DataConnectionCommitFailedError;
+use exface\Core\Exceptions\DataSources\DataConnectionRollbackFailedError;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 
@@ -15,24 +17,16 @@ class OracleSQL extends AbstractSqlConnector {
 	private $insert_id_field_name = 'OID';
 	private $last_insert_id = NULL;
 	private $last_statement = NULL;
+	private $sid = null;
 	
 	/**
 	 * 
 	 * {@inheritDoc}
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::perform_connect()
 	 */
-	protected function perform_connect($host = '', $port = '', $sid = '', $uid = '', $pwd = '', $charset='', $persist = 0) {
-		$uid = $uid ? $uid : $this->get_config_array()['user'];
-		$pwd = $pwd ? $pwd : $this->get_config_array()['password'];
-		$host = $host ? $host : $this->get_config_array()['host'];
-		$port = $port ? $port : $this->get_config_array()['port'];
-		$sid = $sid ? $sid : $this->get_config_array()['sid'];
-		$charset = $charset ? $charset : $this->get_config_array()['character_set'];
-		if ($this->get_config_value('autocommit')){
-			$this->set_autocommit($this->get_config_value('autocommit'));
-		}
-		if (!$conn = oci_connect($uid, $pwd, $host.':'.$port.'/'.$sid, $charset)) {
-			throw new DataConnectionError('Failed to create the database connection for "' . $this->get_alias_with_namespace() . '"!');
+	protected function perform_connect() {
+		if (!$conn = oci_connect($this->get_user(), $this->get_password(), $this->get_host().':'.$this->get_port().'/'.$this->get_sid(), $this->get_character_set())) {
+			throw new DataConnectionFailedError($this, 'Failed to create the database connection for "' . $this->get_alias_with_namespace() . '"!');
 		} else {
 			$this->set_current_connection($conn);
 			// Set default date and time formats to ensure compatibility with ExFace
@@ -140,7 +134,7 @@ class OracleSQL extends AbstractSqlConnector {
 		}
 		
 		if (!oci_commit($this->get_current_connection())){
-			throw new DataConnectionError('Cannot commit transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error());
+			throw new DataConnectionCommitFailedError($this, 'Cannot commit transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error());
 		}
 		return $this;
 	}
@@ -152,7 +146,7 @@ class OracleSQL extends AbstractSqlConnector {
 		}
 		
 		if (!oci_rollback($this->get_current_connection())){
-			throw new DataConnectionError('Cannot rollback transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error());
+			throw new DataConnectionRollbackFailedError($this, 'Cannot rollback transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error());
 		}
 		return $this;
 	}
@@ -168,6 +162,39 @@ class OracleSQL extends AbstractSqlConnector {
 	
 	public function free_result(SqlDataQuery $query){
 		oci_free_statement($query->get_result_resource());
+	}
+	
+	/**
+	 * 
+	 * @return string
+	 */
+	public function get_sid() {
+		return $this->sid;
+	}
+
+	/**
+	 * Sets the sid to be used in this connection
+	 *
+	 * @uxon-property sid
+	 * @uxon-type string
+	 *
+	 * @param string $value
+	 * @return OracleSQL
+	 */
+	public function set_sid($value) {
+		$this->sid = $value;
+		return $this;
+	}
+	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::export_uxon_object()
+	 */
+	public function export_uxon_object(){
+		$uxon = parent::export_uxon_object();
+		$uxon->set_property('sid', $this->get_sid());
+		return $uxon;
 	}
 }
 ?>

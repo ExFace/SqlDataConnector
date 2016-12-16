@@ -16,6 +16,11 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 	private $connected;
 	private $autocommit = true;
 	private $transaction_started = false;
+	private $user = null;
+	private $password = null;
+	private $host = null;
+	private $port = null;
+	private $character_set = null;
 	
 	/**
 	 * @return boolean
@@ -87,6 +92,111 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 		$query = new SqlDataQuery();
 		$query->set_sql($string);
 		return $this->query($query);
+	}
+	
+	public function get_user() {
+		return $this->user;
+	}
+
+	/**
+	 * Sets the user name to be used in this connection
+	 *
+	 * @uxon-property user
+	 * @uxon-type string
+	 *
+	 * @param string $value
+	 * @return AbstractSqlConnector
+	 */
+	public function set_user($value) {
+		$this->user = $value;
+		return $this;
+	}
+	
+	public function get_password() {
+		return $this->password;
+	}
+
+	/**
+	 * Sets the password to be used in this connection
+	 *
+	 * @uxon-property password
+	 * @uxon-type string
+	 *
+	 * @param string $value
+	 * @return AbstractSqlConnector
+	 */
+	public function set_password($value) {
+		$this->password = $value;
+		return $this;
+	}
+	
+	public function get_host() {
+		return $this->host;
+	}
+
+	/**
+	 * Sets the host name or IP address to be used in this connection
+	 *
+	 * @uxon-property host
+	 * @uxon-type string
+	 *
+	 * @param string $value
+	 * @return AbstractSqlConnector
+	 */
+	public function set_host($value) {
+		$this->host = $value;
+		return $this;
+	}
+	
+	public function get_port() {
+		return $this->port;
+	}
+
+	/**
+	 * Sets the port to be used in this connection
+	 *
+	 * @uxon-property port
+	 * @uxon-type number
+	 *
+	 * @param integer $value
+	 * @return AbstractSqlConnector
+	 */
+	public function set_port($value) {
+		$this->port = $value;
+		return $this;
+	}
+	
+	public function get_character_set() {
+		return $this->character_set;
+	}
+
+	/**
+	 * Sets the character set to be used in this connection
+	 *
+	 * @uxon-property character_set
+	 * @uxon-type string
+	 *
+	 * @param string $value
+	 * @return AbstractSqlConnector
+	 */
+	public function set_character_set($value) {
+		$this->character_set = $value;
+		return $this;
+	}
+	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\Core\CommonLogic\AbstractDataConnector::export_uxon_object()
+	 */
+	public function export_uxon_object(){
+		$uxon = parent::export_uxon_object();
+		$uxon->set_option('user', $this->get_user());
+		$uxon->set_option('password', $this->get_password());
+		$uxon->set_option('host', $this->get_host());
+		$uxon->set_option('port', $this->get_port());
+		$uxon->set_option('autocommit', $this->get_autocommit());
+		return $uxon;
 	}
 
 }

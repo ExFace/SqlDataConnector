@@ -1,7 +1,10 @@
 <?php namespace exface\SqlDataConnector\DataConnectors;
 
 use exface\Core\CommonLogic\AbstractDataConnector;
-use exface\Core\Exceptions\DataConnectionError;
+use exface\Core\Exceptions\DataSources\DataConnectionFailedError;
+use exface\Core\Exceptions\DataSources\DataConnectionTransactionStartError;
+use exface\Core\Exceptions\DataSources\DataConnectionCommitFailedError;
+use exface\Core\Exceptions\DataSources\DataConnectionRollbackFailedError;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 
@@ -13,27 +16,22 @@ use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 
 class MsSQL extends AbstractSqlConnector {
 	
+	private $Database = null;
+	
 	/**
 	 * 
 	 * {@inheritDoc}
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::perform_connect()
 	 */
-	protected function perform_connect($host = '', $port = '', $database = '', $uid = '', $pwd = '', $charset = null) {
-		$connectInfo = array();
-		$uid = $uid ? $uid : $this->get_config_array()['UID'];
-		$pwd = $pwd ? $pwd : $this->get_config_array()['PWD'];
-		$host = $host ? $host : $this->get_config_array()['serverName'];
-		$port = $port ? $port : $this->get_config_array()['port'];
-		if ($this->get_config_value('autocommit')){
-			$this->set_autocommit($this->get_config_value('autocommit'));
-		}
+	protected function perform_connect() {
+		$connectInfo = array();		
+		$connectInfo["Database"] = $this->get_Database();
+		$connectInfo["CharacterSet"] = $this->get_CharacterSet();
+		if ($this->get_UID()) $connectInfo["UID"] = $this->get_UID();
+		if ($this->get_PWD()) $connectInfo["PWD"] = $this->get_PWD();
 		
-		$connectInfo["Database"] = $database ? $database : $this->get_config_array()['Database'];
-		$connectInfo["CharacterSet"] = $charset ? $charset : $this->get_config_array()['CharacterSet'];
-		if ($uid) $connectInfo["UID"] = $uid;
-		if ($pwd) $connectInfo["PWD"] = $pwd;
-		if (!$conn = sqlsrv_connect($host . ($port ? ', ' . $port : ''), $connectInfo)) {
-			throw new DataConnectionError("Failed to create the database connection! " . $this->get_last_error($this->get_current_connection()));
+		if (!$conn = sqlsrv_connect($this->get_serverName() . ($this->get_port() ? ', ' . $this->get_port() : ''), $connectInfo)) {
+			throw new DataConnectionFailedError($this, "Failed to create the database connection! " . $this->get_last_error());
 		} else {
 			$this->set_current_connection($conn);
 		}
@@ -57,7 +55,7 @@ class MsSQL extends AbstractSqlConnector {
 	 */
 	protected function perform_query_sql(SqlDataQuery $query) {		
 		if (!$result = sqlsrv_query($this->get_current_connection(), $query->get_sql())) {
-			throw new DataQueryFailedError($query, "SQL query failed: " . $this->get_last_error());
+			throw new DataQueryFailedError($query, "SQL query failed: " . $this->get_last_error(), '6T2T2UI');
 		} else {
 			$query->set_result_resource($result);
 			return $query;
@@ -109,7 +107,7 @@ class MsSQL extends AbstractSqlConnector {
 		}
 		
 		if (!sqlsrv_begin_transaction($this->get_current_connection())){
-			throw new DataConnectionError('Cannot start transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error());
+			throw new DataConnectionTransactionStartError($this, 'Cannot start transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error(), '6T2T2JM');
 		} else {
 			$this->set_transaction_started(true);
 		}
@@ -123,7 +121,7 @@ class MsSQL extends AbstractSqlConnector {
 		}
 		
 		if (!sqlsrv_commit($this->get_current_connection())){
-			throw new DataConnectionError('Cannot commit transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error());
+			throw new DataConnectionCommitFailedError($this, 'Cannot commit transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error(), '6T2T2O9');
 		} else {
 			$this->set_transaction_started(false);
 		}
@@ -137,7 +135,7 @@ class MsSQL extends AbstractSqlConnector {
 		}
 		
 		if (!sqlsrv_begin_transaction($this->get_current_connection())){
-			throw new DataConnectionError('Cannot rollback transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error());
+			throw new DataConnectionRollbackFailedError($this, 'Cannot rollback transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error(), '6T2T2S1');
 		} else {
 			$this->set_transaction_started(false);
 		}
@@ -147,5 +145,89 @@ class MsSQL extends AbstractSqlConnector {
 	public function free_result(SqlDataQuery $query){
 		sqlsrv_free_stmt($query->get_result_resource());
 	}
+	
+	
+	public function get_UID() {
+		return $this->get_user();
+	}
+	
+	/**
+	 * Sets the user id for the connection (same as "user")
+	 *
+	 * @uxon-property UID
+	 * @uxon-type string
+	 *
+	 * @see set_user()
+	 * @param string $value
+	 * @return MsSQL
+	 */
+	public function set_UID($value) {
+		return $this->set_user($value);
+	}
+	
+	public function get_PWD() {
+		return $this->get_password();
+	}
+	
+	/**
+	 * Sets the password for the connection (same as "password")
+	 *
+	 * @uxon-property PWD
+	 * @uxon-type string
+	 *
+	 * @see set_password()
+	 * @param string $value
+	 * @return MsSQL
+	 */
+	public function set_PWD($value) {
+		return $this->set_password($value);
+	}
+	
+	public function get_serverName() {
+		return $this->get_host();
+	}
+	
+	/**
+	 * Sets the server name for the connection (same as "host")
+	 *
+	 * @uxon-property serverName
+	 * @uxon-type string
+	 * 
+	 * @see set_host()
+	 * @param string $value
+	 * @return MsSQL
+	 */
+	public function set_serverName($value) {
+		return $this->set_host($value);
+	}
+	
+	public function get_Database() {
+		return $this->DataBase;
+	}
+	
+	public function set_Database($value) {
+		$this->DataBase = $value;
+		return $this;
+	}
+	
+	public function get_CharacterSet() {
+		return $this->get_character_set();
+	}
+	
+	public function set_CharacterSet($value) {
+		return $this->set_character_set($value);
+	}
+	
+	/**
+	 *
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::export_uxon_object()
+	 */
+	public function export_uxon_object(){
+		$uxon = parent::export_uxon_object();
+		$uxon->set_property('Database', $this->get_Database());
+		return $uxon;
+	}	
+	      
 }
 ?>
