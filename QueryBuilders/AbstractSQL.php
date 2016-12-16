@@ -133,6 +133,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		$values = array();
 		$columns = array();
 		$uid_qpart = null;
+		$sql_generated_qparts = array();
 		// add values
 		foreach ($this->get_values() as $qpart){
 			$attr = $qpart->get_attribute();
@@ -143,7 +144,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			// Ignore attributes, that do not reference an sql column (= do not have a data address at all)
 			if (!$attr->get_data_address() || $this->check_for_sql_statement($attr->get_data_address())) {
 				continue;
-			} 
+			}
 			// Save the query part for later processing if it is the object's UID
 			if ($attr->is_uid_for_object()){
 				$uid_qpart = $qpart;
@@ -152,9 +153,14 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			// Prepare arrays with column aliases and values to implode them later when building the query
 			// Make sure, every column is only addressed once! So the keys of both array actually need to be the column aliases
 			// to prevent duplicates
-			$columns[$attr->get_data_address()] = $attr->get_data_address();	
+			$columns[$attr->get_data_address()] = $attr->get_data_address();
+			$custom_insert_sql = $qpart->get_data_address_property('SQL_INSERT');
 			foreach ($qpart->get_values() as $row => $value){
-				$values[$row][$attr->get_data_address()] = $this->prepare_input_value($value, $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
+				if ($custom_insert_sql){
+					$values[$row][$attr->get_data_address()] = str_replace(array('[#alias#]', '[#value#]'), array($this->get_main_object()->get_alias(), $value), $custom_insert_sql);
+				} else {
+					$values[$row][$attr->get_data_address()] = $this->prepare_input_value($value, $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
+				}
 			}
 		}
 		
