@@ -98,4 +98,8 @@ class SqlDataQuery extends AbstractDataQuery {
 	public function free_result(){
 		$this->get_connection()->free_result($this);
 	}
+	
+	public function print(){
+		return \SqlFormatter::format($this->get_sql(), false);
+	}
 }
