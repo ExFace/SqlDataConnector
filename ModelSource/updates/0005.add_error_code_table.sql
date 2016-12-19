@@ -1,4 +1,4 @@
-CREATE TABLE `exf_error` (
+CREATE TABLE IF NOT EXISTS `exf_error` (
   `oid` binary(16) NOT NULL,
   `app_oid` binary(16) NOT NULL,
   `error_code` varchar(8) NOT NULL,
