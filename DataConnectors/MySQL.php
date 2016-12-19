@@ -56,7 +56,7 @@ class MySQL extends AbstractSqlConnector {
 			}
 			
 			// Set the character set
-			mysqli_query($conn, "{$this->get_connection_method()} {$this->get_charset()}");
+			// mysqli_query($conn, "{$this->get_connection_method()} {$this->get_charset()}");			
 			if (function_exists('mysqli_set_charset')) {
 				 mysqli_set_charset($conn, $this->get_charset());
 			} else {
