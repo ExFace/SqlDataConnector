@@ -46,7 +46,7 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 	}
 	
 	final protected function perform_query(DataQueryInterface $query){
-		if (is_null($this->get_current_connection()) || !is_resource($this->get_current_connection())) {
+		if (is_null($this->get_current_connection())) {
 			$this->connect();
 		}
 		$query->set_connection($this);
@@ -191,11 +191,11 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 	 */
 	public function export_uxon_object(){
 		$uxon = parent::export_uxon_object();
-		$uxon->set_option('user', $this->get_user());
-		$uxon->set_option('password', $this->get_password());
-		$uxon->set_option('host', $this->get_host());
-		$uxon->set_option('port', $this->get_port());
-		$uxon->set_option('autocommit', $this->get_autocommit());
+		$uxon->set_property('user', $this->get_user());
+		$uxon->set_property('password', $this->get_password());
+		$uxon->set_property('host', $this->get_host());
+		$uxon->set_property('port', $this->get_port());
+		$uxon->set_property('autocommit', $this->get_autocommit());
 		return $uxon;
 	}
 
