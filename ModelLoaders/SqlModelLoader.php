@@ -8,12 +8,12 @@ use exface\Core\CommonLogic\Model\Object;
 use exface\Core\CommonLogic\UxonObject;
 use exface\Core\Factories\DataSorterFactory;
 use exface\Core\Interfaces\DataSources\DataConnectionInterface;
-use exface\Core\Exceptions\DataSourceError;
 use exface\Core\Interfaces\DataSources\DataSourceInterface;
 use exface\Core\Factories\ConditionFactory;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\Core\Exceptions\ModelLoaderError;
 use exface\Core\Factories\BehaviorFactory;
+use exface\Core\Exceptions\RangeException;
 
 class SqlModelLoader implements ModelLoaderInterface {
 	private $data_connection = null;
@@ -300,9 +300,9 @@ class SqlModelLoader implements ModelLoaderInterface {
 			$query = $this->get_data_connection()->run_sql($sql);
 			$ds = $query->get_result_array();
 			if (count($ds) > 1){
-				throw new DataSourceError('Multiple user credentials found for data connection "'. $data_connection_id_or_alias . '" and user "' . $user_name . '"!');
+				throw new RangeException('Multiple user credentials found for data connection "'. $data_connection_id_or_alias . '" and user "' . $user_name . '"!', '6T4R8UM');
 			} elseif (count($ds) != 1){
-				throw new DataSourceError('Cannot find data connection "'. $data_connection_id_or_alias . '"!');
+				throw new RangeException('Cannot find data connection "'. $data_connection_id_or_alias . '"!', '6T4R97R');
 			}
 			$ds = $ds[0];
 			$data_source->set_data_connector_alias($ds['data_connector']);
