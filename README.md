@@ -1,2 +1,2 @@
 # SqlDataConnector
-Data connector for SQL databases for the ExFace business web application plattform
+Data connector for SQL databases for the ExFace business web application plattform. The app includes connectors and query builders for MS SQL, MySQL and Oracle. There are also actions for reverse engineering of SQL tables to quickly create a basic meta model, which can then be enhanced manually. This way, creating new meta objects and attributes becomes significantly easier anf much faster when using SQL data sources.
