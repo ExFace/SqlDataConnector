@@ -8,7 +8,6 @@ use exface\Core\CommonLogic\QueryBuilder\QueryPartFilter;
 use exface\Core\DataTypes\AbstractDataType;
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\Core\CommonLogic\Model\RelationPath;
-use exface\Core\Exceptions\DataValidationException;
 use exface\Core\Exceptions\DataTypeValidationError;
 use exface\Core\DataTypes\NumberDataType;
 use exface\SqlDataConnector\DataConnectors\AbstractSqlConnector;
@@ -256,7 +255,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			if (count($qpart->get_values()) == 1){
 				$values = $qpart->get_values();
 				$value = $this->prepare_input_value(reset($values), $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
-				$updates_by_filter[] = $this->get_main_object()->get_alias() . '.' . $attr->get_data_address() . ' = ' . $value;
+				$updates_by_filter[] = $this->get_short_alias($this->get_main_object()->get_alias()) . '.' . $attr->get_data_address() . ' = ' . $value;
 			} else {
 				// TODO check, if there is an id for each value. Those without ids should be put into another query to make an insert
 				//$cases = '';
@@ -274,10 +273,10 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 					 * the UIDs they address and a new filter with exactly this list of UIDs.
 					 */
 					//$cases[$qpart->get_uids()[$row_nr]] = 'WHEN ' . $qpart->get_uids()[$row_nr] . ' THEN ' . $value . "\n";
-					$updates_by_uid[$qpart->get_uids()[$row_nr]][$this->get_main_object()->get_alias() . '.' . $attr->get_data_address()] = $this->get_main_object()->get_alias() . '.' . $attr->get_data_address() .' = '. $value;
+					$updates_by_uid[$qpart->get_uids()[$row_nr]][$this->get_short_alias($this->get_main_object()->get_alias()) . '.' . $attr->get_data_address()] = $this->get_short_alias($this->get_main_object()->get_alias()) . '.' . $attr->get_data_address() .' = '. $value;
 				}
 				// See comment about CASE-based updates a few lines above
-				//$updates_by_filter[] = $this->get_main_object()->get_alias() . '.' . $attr->get_data_address() . " = CASE " . $this->get_main_object()->get_uid_attribute()->get_data_address() . " \n" . implode($cases) . " END";
+				//$updates_by_filter[] = $this->get_short_alias($this->get_main_object()->get_alias()) . '.' . $attr->get_data_address() . " = CASE " . $this->get_main_object()->get_uid_attribute()->get_data_address() . " \n" . implode($cases) . " END";
 			}
 		}
 		
@@ -656,7 +655,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	
 	protected function build_sql_from (){
 		// here we simply have to replace the placeholders in case the from-clause ist a custom sql statement
-		return str_replace('[#alias#]', $this->get_main_object()->get_alias(), $this->get_main_object()->get_data_address()) . ' ' . $this->get_main_object()->get_alias() . $this->get_query_id();
+		return str_replace('[#alias#]', $this->get_main_object()->get_alias(), $this->get_main_object()->get_data_address()) . ' ' . $this->get_short_alias($this->get_main_object()->get_alias()) . $this->get_query_id();
 	}
 	
 	/**
