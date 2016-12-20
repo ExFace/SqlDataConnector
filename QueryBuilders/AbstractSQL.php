@@ -132,7 +132,6 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		$values = array();
 		$columns = array();
 		$uid_qpart = null;
-		$sql_generated_qparts = array();
 		// add values
 		foreach ($this->get_values() as $qpart){
 			$attr = $qpart->get_attribute();

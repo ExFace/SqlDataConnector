@@ -107,4 +107,5 @@ class SqlDataQuery extends AbstractDataQuery {
 	public function to_string(){
 		return \SqlFormatter::format($this->get_sql(), false);
 	}
+	
 }

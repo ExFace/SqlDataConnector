@@ -37,6 +37,13 @@
             "attribute_alias": "UID"
         },
         {
+            "expression": "FULL_ERROR_CODE",
+            "name": "FULL_ERROR_CODE",
+            "hidden": false,
+            "data_type": "String",
+            "attribute_alias": "FULL_ERROR_CODE"
+        },
+        {
             "expression": "APP",
             "name": "APP",
             "hidden": false,
@@ -58,13 +65,6 @@
             "attribute_alias": "ERROR_TEXT"
         },
         {
-            "expression": "FULL_ERROR_CODE",
-            "name": "FULL_ERROR_CODE",
-            "hidden": false,
-            "data_type": "String",
-            "attribute_alias": "FULL_ERROR_CODE"
-        },
-        {
             "expression": "LABEL",
             "name": "LABEL",
             "hidden": false,
@@ -79,10 +79,10 @@
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11e6c38ec343165da3e40205857feb80",
+            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2T2JM",
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2T2JM",
             "ERROR_TEXT": "Cannot start transaction",
-            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2T2JM",
             "LABEL": "exface.SqlDataConnector.6T2T2JM"
         },
         {
@@ -91,10 +91,10 @@
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11e6c38ecd3cfdeba3e40205857feb80",
+            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2T2O9",
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2T2O9",
             "ERROR_TEXT": "Cannot commit transaction",
-            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2T2O9",
             "LABEL": "exface.SqlDataConnector.6T2T2O9"
         },
         {
@@ -103,10 +103,10 @@
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11e6c38ed55674b7a3e40205857feb80",
+            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2T2S1",
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2T2S1",
             "ERROR_TEXT": "Cannot rollback transaction",
-            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2T2S1",
             "LABEL": "exface.SqlDataConnector.6T2T2S1"
         },
         {
@@ -115,10 +115,10 @@
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11e6c38edaae4efea3e40205857feb80",
+            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2T2UI",
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2T2UI",
             "ERROR_TEXT": "SQL query failed",
-            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2T2UI",
             "LABEL": "exface.SqlDataConnector.6T2T2UI"
         },
         {
@@ -127,10 +127,10 @@
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11e6c391948a0da6a3e40205857feb80",
+            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2TBVR",
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2TBVR",
             "ERROR_TEXT": "Cannot connect to database",
-            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2TBVR",
             "LABEL": "exface.SqlDataConnector.6T2TBVR"
         },
         {
@@ -139,10 +139,10 @@
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11e6c391b43b6deda3e40205857feb80",
+            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2TCAJ",
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2TCAJ",
             "ERROR_TEXT": "Cannot get last insert id from database",
-            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2TCAJ",
             "LABEL": "exface.SqlDataConnector.6T2TCAJ"
         },
         {
@@ -151,10 +151,10 @@
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11e6c391cb140e35a3e40205857feb80",
+            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2TCL6",
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2TCL6",
             "ERROR_TEXT": "Cannot  count rows affected by query",
-            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T2TCL6",
             "LABEL": "exface.SqlDataConnector.6T2TCL6"
         }
     ],
