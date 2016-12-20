@@ -99,7 +99,12 @@ class SqlDataQuery extends AbstractDataQuery {
 		$this->get_connection()->free_result($this);
 	}
 	
-	public function print(){
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\Core\CommonLogic\AbstractDataQuery::to_string()
+	 */
+	public function to_string(){
 		return \SqlFormatter::format($this->get_sql(), false);
 	}
 }
