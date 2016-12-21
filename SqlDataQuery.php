@@ -2,6 +2,8 @@
 
 use exface\Core\CommonLogic\AbstractDataQuery;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
+use exface\Core\Factories\WidgetFactory;
+use exface\Core\Interfaces\UiPageInterface;
 
 class SqlDataQuery extends AbstractDataQuery {
 	
@@ -108,4 +110,21 @@ class SqlDataQuery extends AbstractDataQuery {
 		return \SqlFormatter::format($this->get_sql(), false);
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * The SQL query creates a debug panel showing a formatted SQL statement.
+	 * 
+	 * @see \exface\Core\CommonLogic\AbstractDataQuery::get_debug_panels()
+	 */
+	public function get_debug_panels(UiPageInterface $page, $parent = null){
+		$sql_panel = WidgetFactory::create($page, 'Panel', $parent);
+		/* @var $sql_widget \exface\Core\Widgets\Html */
+		$sql_widget = WidgetFactory::create($page, 'Html', $sql_panel);
+		$sql_widget->set_value(\SqlFormatter::format($this->get_sql()));
+		$sql_widget->set_width('100%');
+		$sql_panel->add_widget($sql_widget);
+		$sql_panel->set_caption('SQL');
+		return array($sql_panel);
+	}
 }
