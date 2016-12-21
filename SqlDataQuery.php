@@ -4,6 +4,7 @@ use exface\Core\CommonLogic\AbstractDataQuery;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\Core\Factories\WidgetFactory;
 use exface\Core\Interfaces\UiPageInterface;
+use exface\Core\Widgets\DebugMessage;
 
 class SqlDataQuery extends AbstractDataQuery {
 	
@@ -115,16 +116,19 @@ class SqlDataQuery extends AbstractDataQuery {
 	 * 
 	 * The SQL query creates a debug panel showing a formatted SQL statement.
 	 * 
-	 * @see \exface\Core\CommonLogic\AbstractDataQuery::get_debug_panels()
+	 * @see \exface\Core\CommonLogic\AbstractDataQuery::create_debug_widget()
 	 */
-	public function get_debug_panels(UiPageInterface $page, $parent = null){
-		$sql_panel = WidgetFactory::create($page, 'Panel', $parent);
+	public function create_debug_widget(DebugMessage $debug_widget){
+		$page = $debug_widget->get_page(); 
+		$sql_tab = $debug_widget->create_tab();
 		/* @var $sql_widget \exface\Core\Widgets\Html */
-		$sql_widget = WidgetFactory::create($page, 'Html', $sql_panel);
+		$sql_widget = WidgetFactory::create($page, 'Html', $sql_tab);
 		$sql_widget->set_value('<div style="padding:10px;">' . \SqlFormatter::format($this->get_sql()) . '</div>');
 		$sql_widget->set_width('100%');
-		$sql_panel->add_widget($sql_widget);
-		$sql_panel->set_caption('SQL');
-		return array($sql_panel);
+		$sql_tab->add_widget($sql_widget);
+		$sql_tab->set_caption('SQL');
+		
+		$debug_widget->add_tab($sql_widget);
+		return $debug_widget;
 	}
 }
