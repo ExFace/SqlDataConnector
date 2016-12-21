@@ -121,14 +121,13 @@ class SqlDataQuery extends AbstractDataQuery {
 	public function create_debug_widget(DebugMessage $debug_widget){
 		$page = $debug_widget->get_page(); 
 		$sql_tab = $debug_widget->create_tab();
+		$sql_tab->set_caption('SQL');
 		/* @var $sql_widget \exface\Core\Widgets\Html */
 		$sql_widget = WidgetFactory::create($page, 'Html', $sql_tab);
 		$sql_widget->set_value('<div style="padding:10px;">' . \SqlFormatter::format($this->get_sql()) . '</div>');
 		$sql_widget->set_width('100%');
 		$sql_tab->add_widget($sql_widget);
-		$sql_tab->set_caption('SQL');
-		
-		$debug_widget->add_tab($sql_widget);
+		$debug_widget->add_tab($sql_tab);
 		return $debug_widget;
 	}
 }
