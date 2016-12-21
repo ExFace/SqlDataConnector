@@ -77,7 +77,7 @@ class OracleSQL extends AbstractSqlConnector {
 			}
 			
 			if (!$ex) {
-				throw new DataQueryFailedError($query, "SQL query failed: " . $this->get_last_error());
+				throw new DataQueryFailedError($query, "SQL query failed! " . $this->get_last_error());
 				return $query;
 			} else {
 				$query->set_result_resource($result);

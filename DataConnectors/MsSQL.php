@@ -55,7 +55,7 @@ class MsSQL extends AbstractSqlConnector {
 	 */
 	protected function perform_query_sql(SqlDataQuery $query) {		
 		if (!$result = sqlsrv_query($this->get_current_connection(), $query->get_sql())) {
-			throw new DataQueryFailedError($query, "SQL query failed: " . $this->get_last_error(), '6T2T2UI');
+			throw new DataQueryFailedError($query, "SQL query failed! " . $this->get_last_error(), '6T2T2UI');
 		} else {
 			$query->set_result_resource($result);
 			return $query;
