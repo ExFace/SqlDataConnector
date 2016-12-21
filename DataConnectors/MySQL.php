@@ -91,7 +91,7 @@ class MySQL extends AbstractSqlConnector {
 			$result = mysqli_query($this->get_current_connection(), $query->get_sql());
 			$query->set_result_resource($result);
 		} catch (\mysqli_sql_exception $e){
-			throw new DataQueryFailedError($query, "SQL query failed: " . $this->get_last_error(), '6T2T2UI', $e);
+			throw new DataQueryFailedError($query, "SQL query failed! " . $e->getMessage(), '6T2T2UI', $e);
 			
 		}
 		return $query;
