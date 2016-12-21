@@ -121,7 +121,7 @@ class SqlDataQuery extends AbstractDataQuery {
 		$sql_panel = WidgetFactory::create($page, 'Panel', $parent);
 		/* @var $sql_widget \exface\Core\Widgets\Html */
 		$sql_widget = WidgetFactory::create($page, 'Html', $sql_panel);
-		$sql_widget->set_value(\SqlFormatter::format($this->get_sql()));
+		$sql_widget->set_value('<div style="padding:10px;">' . \SqlFormatter::format($this->get_sql()) . '</div>');
 		$sql_widget->set_width('100%');
 		$sql_panel->add_widget($sql_widget);
 		$sql_panel->set_caption('SQL');
