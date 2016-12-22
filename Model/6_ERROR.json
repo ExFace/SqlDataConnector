@@ -156,6 +156,18 @@
             "ERROR_CODE": "6T2TCL6",
             "ERROR_TEXT": "Cannot  count rows affected by query",
             "LABEL": "exface.SqlDataConnector.6T2TCL6"
+        },
+        {
+            "CREATED_ON": "2016-12-22 10:11:17",
+            "MODIFIED_ON": "2016-12-22 10:11:17",
+            "CREATED_BY_USER": "0x31000000000000000000000000000000",
+            "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
+            "UID": "0x11e6c82ef88a49ab93cce4b318306b9a",
+            "FULL_ERROR_CODE": "exface.SqlDataConnector.6T5U304",
+            "APP": "0x11e6affb715baea58943e4b318306b9a",
+            "ERROR_CODE": "6T5U304",
+            "ERROR_TEXT": "Unsupported data connector for SQL reverse engineering. Currently supported are MySQL, Oracle SQL and Microsoft SQL",
+            "LABEL": "exface.SqlDataConnector.6T5U304"
         }
     ],
     "totals_rows": [],
