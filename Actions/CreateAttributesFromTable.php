@@ -1,7 +1,7 @@
 <?php namespace exface\SqlDataConnector\Actions;
 
-use exface\Core\Exceptions\ActionRuntimeException;
 use exface\Core\CommonLogic\AbstractAction;
+use exface\Core\Exceptions\Actions\ActionInputInvalidObjectError;
 
 /**
  * This action runs one or more selected test steps
@@ -18,8 +18,8 @@ class CreateAttributesFromTable extends AbstractAction {
 	}	
 	
 	protected function perform(){
-		if (strcasecmp($this->get_input_data_sheet()->get_meta_object()->get_alias_with_namespace(), 'exface.Core.OBJECT') != 0){
-			throw new ActionRuntimeException('Action "' . $this->get_alias() . '" exprects an exface.Core.OBJECT as input, "' . $this->get_input_data_sheet()->get_meta_object()->get_alias_with_namespace() . '" given instead!');
+		if (!$this->get_input_data_sheet()->get_meta_object()->is('exface.Core.OBJECT')){
+			throw new ActionInputInvalidObjectError($this, 'Action "' . $this->get_alias() . '" exprects an exface.Core.OBJECT as input, "' . $this->get_input_data_sheet()->get_meta_object()->get_alias_with_namespace() . '" given instead!');
 		}
 		
 		$result_data_sheet = $this->get_workbench()->data()->create_data_sheet($this->get_workbench()->model()->get_object('exface.Core.ATTRIBUTE'));

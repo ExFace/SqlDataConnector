@@ -1,10 +1,10 @@
 <?php namespace exface\SqlDataConnector;
 
 use exface\Core\CommonLogic\Model\Object;
-use exface\Core\Exceptions\ActionRuntimeException;
 use exface\Core\CommonLogic\NameResolver;
 use exface\Core\Factories\ConfigurationFactory;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
+use exface\Core\Exceptions\UnexpectedValueException;
 
 class SqlDataConnectorApp extends \exface\Core\CommonLogic\AbstractApp {
 	const FOLDER_WITH_MODEL_SOURCE_SQL = 'ModelSource';
@@ -22,7 +22,7 @@ class SqlDataConnectorApp extends \exface\Core\CommonLogic\AbstractApp {
 				case 'MySQL':
 				case 'ModxDb': $this->set_explorer(new MySQLExplorer($this)); break;
 				case 'MsSQL': $this->set_explorer(new MSSQLExplorer($this)); break;
-				default: throw new ActionRuntimeException('Unsupported database type "' . $name->get_alias() . '"!');
+				default: throw new UnexpectedValueException('Unsupported database type "' . $name->get_alias() . '"!', '6T5U304');
 			}
 		}
 		return $this->get_explorer()->get_attribute_properties_from_table($meta_object, $table_name);

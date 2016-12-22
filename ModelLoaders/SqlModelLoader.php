@@ -1,7 +1,6 @@
 <?php namespace exface\SqlDataConnector\ModelLoaders;
 
 use exface\Core\Interfaces\DataSources\ModelLoaderInterface;
-use exface\Core\Exceptions\MetaModelObjectNotFoundException;
 use exface\Core\CommonLogic\Model\Attribute;
 use exface\Core\CommonLogic\Model\Relation;
 use exface\Core\CommonLogic\Model\Object;
@@ -11,9 +10,10 @@ use exface\Core\Interfaces\DataSources\DataConnectionInterface;
 use exface\Core\Interfaces\DataSources\DataSourceInterface;
 use exface\Core\Factories\ConditionFactory;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
-use exface\Core\Exceptions\ModelLoaderError;
 use exface\Core\Factories\BehaviorFactory;
 use exface\Core\Exceptions\RangeException;
+use exface\Core\Exceptions\Model\MetaObjectNotFoundError;
+use exface\Core\Exceptions\Model\MetaModelLoadingFailedError;
 
 class SqlModelLoader implements ModelLoaderInterface {
 	private $data_connection = null;
@@ -87,7 +87,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 				}
 			}
 		} else {
-			throw new MetaModelObjectNotFoundException('Object with alias "' . $object->get_alias_with_namespace() . '" or id "' . $object->get_id() . '" not found!');
+			throw new MetaObjectNotFoundError('Object with alias "' . $object->get_alias_with_namespace() . '" or id "' . $object->get_id() . '" not found!');
 		}
 		
 		// select all attributes for this object
@@ -362,7 +362,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 	 */
 	public function set_data_connection(DataConnectionInterface &$connection) {
 		if (!($connection instanceof SqlDataConnectorInterface)){
-			throw new ModelLoaderError('Cannot use data connection "' . get_class($connection) . '" for the SQL model loader: the connection must implement the SqlDataConnector interface!');
+			throw new MetaModelLoadingFailedError('Cannot use data connection "' . get_class($connection) . '" for the SQL model loader: the connection must implement the SqlDataConnector interface!');
 		}
 		$this->data_connection = $connection;
 		return $this;
