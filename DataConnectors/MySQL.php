@@ -75,7 +75,7 @@ class MySQL extends AbstractSqlConnector {
 	protected function perform_disconnect() {
 		try {
 			mysqli_close($this->get_current_connection());
-		} catch (\mysqli_sql_exception $e){
+		} catch (\Throwable $e){
 			// ignore errors on close
 		}
 	}
