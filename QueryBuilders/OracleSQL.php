@@ -337,7 +337,7 @@ class OracleSQL extends AbstractSQL {
 		$args = array();
 		if ($args_pos = strpos($group_function, '(')){
 			$func = substr($group_function, 0, $args_pos);
-			$args = explode(',', substr($group_function, ($args_pos+1), -1));
+			$args = explode(EXF_LIST_SEPARATOR, substr($group_function, ($args_pos+1), -1));
 		} else {
 			$func = $group_function;
 		}

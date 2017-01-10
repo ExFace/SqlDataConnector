@@ -815,7 +815,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			if ($comparator != EXF_COMPARATOR_IN){
 				$value = $data_type::parse($value);
 			} else {
-				$values = explode(',', trim($value, ','));
+				$values = explode(EXF_LIST_SEPARATOR, trim($value, EXF_LIST_SEPARATOR));
 				foreach ($values as $nr => $val){
 					// Ignore empty strings, which can result from malformed values like "1,2,,4".
 					if ($val === '') {
