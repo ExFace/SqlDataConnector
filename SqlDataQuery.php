@@ -3,7 +3,6 @@
 use exface\Core\CommonLogic\AbstractDataQuery;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\Core\Factories\WidgetFactory;
-use exface\Core\Interfaces\UiPageInterface;
 use exface\Core\Widgets\DebugMessage;
 
 class SqlDataQuery extends AbstractDataQuery {
