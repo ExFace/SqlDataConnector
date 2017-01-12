@@ -56,12 +56,10 @@ class SqlModelLoader implements ModelLoaderInterface {
 			
 			$object->set_id($row['oid']);
 			$object->set_name($row['object_name']);
-			$object->set_data_address($row['data_address']);
 			$object->set_alias($row['object_alias']);
 			$object->set_data_source_id($row['data_source_oid']);
 			$object->set_app_id($row['app_oid']);
 			$object->set_namespace($row['app_alias']);
-			$object->set_short_description($row['short_description']);
 			if ($row['has_behaviors']) {
 				$load_behaviors = true;
 			}
@@ -76,6 +74,12 @@ class SqlModelLoader implements ModelLoaderInterface {
 			}
 			
 			// Overwrite inherited properties
+			if (!$object->get_data_address()){
+				$object->set_data_address($row['data_address']);
+			}
+			if (!$object->get_short_description()){
+				$object->set_short_description($row['short_description']);
+			}
 			if ($data_address_properties = UxonObject::from_json($row['data_address_properties'])){
 				if (!$data_address_properties->is_empty()){
 					$object->set_data_address_properties($data_address_properties);
@@ -86,6 +90,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 					$object->set_default_editor_uxon($default_editor_uxon);
 				}
 			}
+			
 		} else {
 			throw new MetaObjectNotFoundError('Object with alias "' . $object->get_alias_with_namespace() . '" or id "' . $object->get_id() . '" not found!');
 		}
