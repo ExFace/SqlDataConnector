@@ -4,7 +4,12 @@ use exface\Core\DataTypes\AbstractDataType;
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\Core\Exceptions\QueryBuilderException;
 /**
- * A query builder for oracle SQL.
+ * A query builder for Oracle SQL.
+ * 
+ * Data address properties for objects:
+ * - SQL_SELECT_WHERE - custom where statement automatically appended to direct selects for this object (not if the object's table
+ * is joined!). Usefull for generic tables, where different meta objects are stored and distinguished by specific keys in a
+ * special column. The value of SQL_SELECT_WHERE should contain the [#alias#] placeholder: e.g. [#alias#].mycolumn = 'myvalue'.
  * 
  * @author Andrej Kabachnik
  *
@@ -45,6 +50,7 @@ class OracleSQL extends AbstractSQL {
 				$core_joins = array_merge($core_joins, $this->build_sql_joins($qpart));
 				$group_by .= ', ' . $this->build_sql_group_by($qpart);
 			}
+			
 			// filters -> WHERE
 			$where = $this->build_sql_where($this->get_filters());
 			$core_joins = array_merge($core_joins, $this->build_sql_joins($this->get_filters()));
@@ -52,6 +58,12 @@ class OracleSQL extends AbstractSQL {
 			foreach ($this->get_filters()->get_used_relations() as $rel_alias => $rel){
 				$core_relations[] = $rel_alias;
 			}
+			
+			// Object data source property SQL_SELECT_WHERE -> WHERE
+			if ($custom_where = $this->get_main_object()->get_data_address_property('SQL_SELECT_WHERE')){
+				$where = $this->append_custom_where($where, $custom_where);
+			}
+			
 			// sorters -> ORDER BY
 			foreach ($this->get_sorters() as $qpart){
 				if ($group_by){
@@ -191,6 +203,10 @@ class OracleSQL extends AbstractSQL {
 			$where = $this->build_sql_where($this->get_filters());
 			$joins = $this->build_sql_joins($this->get_filters());
 			$filter_object_ids = $this->get_filters()->get_object_ids_safe_for_aggregation();			
+			// Object data source property SQL_SELECT_WHERE -> WHERE
+			if ($custom_where = $this->get_main_object()->get_data_address_property('SQL_SELECT_WHERE')){
+				$where = $this->append_custom_where($where, $custom_where);
+			}
 			$where = $where ? "\n WHERE " . $where : '';
 			// GROUP BY
 			foreach ($this->get_aggregations() as $qpart){
@@ -271,6 +287,11 @@ class OracleSQL extends AbstractSQL {
 		// filters -> WHERE
 		$totals_where = $this->build_sql_where($this->get_filters());
 		$totals_joins = array_merge($totals_joins, $this->build_sql_joins($this->get_filters()));
+		
+		// Object data source property SQL_SELECT_WHERE -> WHERE
+		if ($custom_where = $this->get_main_object()->get_data_address_property('SQL_SELECT_WHERE')){
+			$totals_where = $this->append_custom_where($totals_where, $custom_where);
+		}
 		
 		// GROUP BY
 		foreach ($this->get_aggregations() as $qpart){

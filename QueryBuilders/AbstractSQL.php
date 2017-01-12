@@ -1047,5 +1047,19 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	protected function get_next_subquery_id(){
 		return ++$this->subquery_counter;
 	}
+	
+	/**
+	 * Appends a custom where statement pattern to the given original where statement.
+	 * Replaces the [#alias#] placeholder with the $table_alias if given or the main table alias otherwise
+	 * 
+	 * @param string $original_where_statement
+	 * @param string $custom_statement
+	 * @param string $table_alias
+	 * @param string $operator
+	 * @return string
+	 */
+	protected function append_custom_where($original_where_statement, $custom_statement, $table_alias = null, $operator = 'AND'){
+		return $original_where_statement . ($original_where_statement ? ' ' . $operator . ' ' : '') . str_replace('[#alias#]', ($table_alias ? $table_alias : $this->get_short_alias($this->get_main_object()->get_alias())), $custom_statement);
+	}
 }
 ?>

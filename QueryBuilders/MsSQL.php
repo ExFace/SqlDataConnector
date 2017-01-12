@@ -2,7 +2,12 @@
 namespace exface\SqlDataConnector\QueryBuilders;
 
 /**
- * A query builder for oracle SQL.
+ * A query builder for Microsoft SQL.
+ * 
+ * Data address properties for objects:
+ * - SQL_SELECT_WHERE - custom where statement automatically appended to direct selects for this object (not if the object's table
+ * is joined!). Usefull for generic tables, where different meta objects are stored and distinguished by specific keys in a
+ * special column. The value of SQL_SELECT_WHERE should contain the [#alias#] placeholder: e.g. [#alias#].mycolumn = 'myvalue'.
  * 
  * @author Andrej Kabachnik
  *
@@ -37,6 +42,10 @@ class MsSQL extends AbstractSQL {
 		$where = $this->build_sql_where($this->get_filters());
 		$joins = $this->build_sql_joins($this->get_filters());
 		$filter_object_ids = $this->get_filters()->get_object_ids_safe_for_aggregation();
+		// Object data source property SQL_SELECT_WHERE -> WHERE
+		if ($custom_where = $this->get_main_object()->get_data_address_property('SQL_SELECT_WHERE')){
+			$where = $this->append_custom_where($where, $custom_where);
+		}
 		$where = $where ? "\n WHERE " . $where : '';
 		
 		$has_attributes_with_reverse_relations = count($this->get_attributes_with_reverse_relations());
@@ -148,7 +157,7 @@ class MsSQL extends AbstractSQL {
 		} else {
 			$query = "\n SELECT " . $distinct .  $select . " FROM " . $from . $join . $where . $group_by . $order_by . $limit;
 		}
-		//var_dump($query);
+		
 		return $query;
 	}
 	
@@ -172,6 +181,11 @@ class MsSQL extends AbstractSQL {
 		// filters -> WHERE
 		$totals_where = $this->build_sql_where($this->get_filters());
 		$totals_joins = array_merge($totals_joins, $this->build_sql_joins($this->get_filters()));
+		
+		// Object data source property SQL_SELECT_WHERE -> WHERE
+		if ($custom_where = $this->get_main_object()->get_data_address_property('SQL_SELECT_WHERE')){
+			$totals_where = $this->append_custom_where($totals_where, $custom_where);
+		}
 		
 		// GROUP BY
 		foreach ($this->get_aggregations() as $qpart){
