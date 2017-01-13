@@ -241,6 +241,9 @@ class SqlModelLoader implements ModelLoaderInterface {
 		$attr->set_editable($row['attribute_editable_flag']);
 		$attr->set_hidden($row['attribute_hidden_flag']);
 		$attr->set_system($row['system_flag']);
+		$attr->set_sortable($row['attribute_sortable_flag']);
+		$attr->set_filterable($row['attribute_filterable_flag']);
+		$attr->set_aggregatable($row['attribute_aggregatable_flag']);
 		$attr->set_default_display_order($row['default_display_order']);
 		$attr->set_relation_flag($row['related_object_oid'] ? true : false);
 		$attr->set_default_value($row['default_value']);
