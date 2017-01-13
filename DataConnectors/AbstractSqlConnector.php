@@ -59,7 +59,7 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 		return $this->current_connection;
 	}
 	
-	public function set_current_connection(&$value) {
+	public function set_current_connection($value) {
 		$this->current_connection = $value;
 		$this->set_connected(true);
 		return $this;

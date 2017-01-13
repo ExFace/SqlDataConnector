@@ -224,7 +224,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 		return $object;
 	}
 	
-	protected function create_attribute_from_db_row(Object &$object, array $row){
+	protected function create_attribute_from_db_row(Object $object, array $row){
 		$model = $object->get_model();
 		$attr = new Attribute($model);
 		// ensure the attributes all have the correct parent object (because inherited attributes actually would 
@@ -365,7 +365,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 	 * {@inheritDoc}
 	 * @see \exface\Core\Interfaces\DataSources\ModelLoaderInterface::set_data_connection()
 	 */
-	public function set_data_connection(DataConnectionInterface &$connection) {
+	public function set_data_connection(DataConnectionInterface $connection) {
 		if (!($connection instanceof SqlDataConnectorInterface)){
 			throw new MetaModelLoadingFailedError('Cannot use data connection "' . get_class($connection) . '" for the SQL model loader: the connection must implement the SqlDataConnector interface!');
 		}
