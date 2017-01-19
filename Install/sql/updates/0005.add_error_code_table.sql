@@ -9,6 +9,6 @@ CREATE TABLE IF NOT EXISTS `exf_error` (
   `modified_by_user_oid` binary(16) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE exf_error_code;
+DROP TABLE IF EXISTS exf_error_code;
 
-DROP TABLE exf_config;
+DROP TABLE IF EXISTS exf_config;
