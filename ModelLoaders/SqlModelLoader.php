@@ -14,6 +14,8 @@ use exface\Core\Factories\BehaviorFactory;
 use exface\Core\Exceptions\RangeException;
 use exface\Core\Exceptions\Model\MetaObjectNotFoundError;
 use exface\Core\Exceptions\Model\MetaModelLoadingFailedError;
+use exface\Core\CommonLogic\Model\ObjectAction;
+use exface\Core\CommonLogic\Model\ObjectActionList;
 
 class SqlModelLoader implements ModelLoaderInterface {
 	private $data_connection = null;
@@ -373,6 +375,36 @@ class SqlModelLoader implements ModelLoaderInterface {
 			throw new MetaModelLoadingFailedError('Cannot use data connection "' . get_class($connection) . '" for the SQL model loader: the connection must implement the SqlDataConnector interface!');
 		}
 		$this->data_connection = $connection;
+		return $this;
+	}
+	
+	/**
+	 *
+	 * {@inheritDoc}
+	 * @see \exface\Core\Interfaces\DataSources\ModelLoaderInterface::load_object_actions()
+	 */
+	public function load_object_actions(Object $object){
+		$object_id_list = implode(',', $object->get_parent_objects_ids());
+		$object_id_list = $object->get_id() . ($object_id_list ? ',' . $object_id_list : '');
+		$query = $this->get_data_connection()->run_sql('
+				SELECT
+					oa.*, a.app_alias
+				FROM exf_object_action oa LEFT JOIN exf_app a ON a.oid = oa.action_app_oid
+				WHERE oa.object_oid IN (' . $object_id_list . ')');
+		if($res = $query->get_result_array()){
+			$list = new ObjectActionList($object->get_workbench(), $object);
+			foreach ($res as $row){
+				$a = new ObjectAction($object);
+				$a->set_app($object->get_workbench()->get_app($row['app_alias']));
+				$a->set_action($row['action']);
+				$a->set_action_uxon($row['action_uxon']);
+				$a->set_alias($row['alias']);
+				$a->set_name($row['name']);
+				$a->set_use_in_object_basket($row['use_in_object_basket_flag']);
+				$list->add($a);
+			}
+			$object->set_actions($list);
+		}
 		return $this;
 	}
 }
