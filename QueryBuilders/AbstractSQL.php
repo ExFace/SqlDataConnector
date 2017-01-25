@@ -317,7 +317,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	protected function split_by_meta_object(array $qparts){
 		$queries = array();
 		foreach ($qparts as $qpart){
-			/* @var $attr \exface\Core\CommonLogic\Model\attribute */
+			/* @var $attr \exface\Core\CommonLogic\Model\Attribute */
 			$attr = $qpart->get_attribute();
 			if (!$queries[$attr->get_relation_path()->to_string()]){
 				$q = clone $this;
