@@ -16,6 +16,10 @@ use exface\Core\Exceptions\Model\MetaObjectNotFoundError;
 use exface\Core\Exceptions\Model\MetaModelLoadingFailedError;
 use exface\Core\CommonLogic\Model\ObjectAction;
 use exface\Core\CommonLogic\Model\ObjectActionList;
+use exface\Core\CommonLogic\Model\ActionList;
+use exface\Core\CommonLogic\Model\AppActionList;
+use exface\Core\Factories\ActionFactory;
+use exface\Core\Interfaces\AppInterface;
 
 class SqlModelLoader implements ModelLoaderInterface {
 	private $data_connection = null;
@@ -383,29 +387,57 @@ class SqlModelLoader implements ModelLoaderInterface {
 	 * {@inheritDoc}
 	 * @see \exface\Core\Interfaces\DataSources\ModelLoaderInterface::load_object_actions()
 	 */
-	public function load_object_actions(Object $object){
-		$object_id_list = implode(',', $object->get_parent_objects_ids());
-		$object_id_list = $object->get_id() . ($object_id_list ? ',' . $object_id_list : '');
+	public function load_object_actions(ObjectActionList $empty_list){
+		$object_id_list = implode(',', $empty_list->get_meta_object()->get_parent_objects_ids());
+		$object_id_list = $empty_list->get_meta_object()->get_id() . ($object_id_list ? ',' . $object_id_list : '');
+		$sql_where = 'oa.object_oid IN (' . $object_id_list . ')';
+		return $this->load_actions_from_model($empty_list, $sql_where);
+	}
+	
+	public function load_app_actions(AppActionList $empty_list){
+		$sql_where = 'a.app_alias = "' . $empty_list->get_app()->get_alias_with_namespace() . '"';
+		return $this->load_actions_from_model($empty_list, $sql_where);
+	}
+	
+	public function load_action(AppInterface $app, $action_alias){
+		$sql_where = 'a.app_alias = "' . $app->get_alias_with_namespace() . '" AND oa.alias = "' . $action_alias . '"';
+		return $this->load_actions_from_model(new AppActionList($app->get_workbench(), $app), $sql_where)->get_first();
+	}
+	
+	/**
+	 * 
+	 * @param ActionList $action_list
+	 * @param string $sql_where
+	 * @return \exface\Core\CommonLogic\Model\ActionList
+	 */
+	protected function load_actions_from_model(ActionList $action_list, $sql_where){
+		$basket_aliases = ($action_list instanceof ObjectActionList) ? $action_list->get_object_basket_action_aliases() : array();
+		
 		$query = $this->get_data_connection()->run_sql('
 				SELECT
 					oa.*, a.app_alias
 				FROM exf_object_action oa LEFT JOIN exf_app a ON a.oid = oa.action_app_oid
-				WHERE oa.object_oid IN (' . $object_id_list . ')');
+				WHERE ' . $sql_where);
 		if($res = $query->get_result_array()){
-			$list = new ObjectActionList($object->get_workbench(), $object);
 			foreach ($res as $row){
-				$a = new ObjectAction($object);
-				$a->set_app($object->get_workbench()->get_app($row['app_alias']));
-				$a->set_action($row['action']);
-				$a->set_action_uxon($row['action_uxon']);
-				$a->set_alias($row['alias']);
+				if ($row['config_uxon']){
+					$action_uxon = UxonObject::from_anything($row['config_uxon']);
+				}
+				$a = ActionFactory::create_from_model($row['action'], $row['alias'], $action_list->get_workbench()->get_app($row['app_alias']), $action_uxon);
 				$a->set_name($row['name']);
-				$a->set_use_in_object_basket($row['use_in_object_basket_flag']);
-				$list->add($a);
+				$action_list->add($a);
+				
+				if ($row['use_in_object_basket_flag']){
+					$basket_aliases[] = $a->get_alias_with_namespace();
+				}
 			}
-			$object->set_actions($list);
 		}
-		return $this;
+		
+		if ($action_list instanceof ObjectActionList){
+			$action_list->set_object_basket_action_aliases($basket_aliases);
+		}
+		
+		return $action_list;
 	}
 }
 
