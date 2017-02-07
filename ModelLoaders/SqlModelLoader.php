@@ -14,7 +14,6 @@ use exface\Core\Factories\BehaviorFactory;
 use exface\Core\Exceptions\RangeException;
 use exface\Core\Exceptions\Model\MetaObjectNotFoundError;
 use exface\Core\Exceptions\Model\MetaModelLoadingFailedError;
-use exface\Core\CommonLogic\Model\ObjectAction;
 use exface\Core\CommonLogic\Model\ObjectActionList;
 use exface\Core\CommonLogic\Model\ActionList;
 use exface\Core\CommonLogic\Model\AppActionList;
