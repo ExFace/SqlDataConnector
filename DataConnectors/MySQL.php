@@ -133,27 +133,43 @@ class MySQL extends AbstractSqlConnector {
 	}
 	
 	public function transaction_start(){
-		try {
-			return mysqli_begin_transaction ($this->get_current_connection());
-		} catch (\mysqli_sql_exception $e){
-			throw new DataConnectionTransactionStartError($this, "Cannot start transaction: " . $e->getMessage(), '6T2T2JM', $e);
+		if (!$this->transaction_is_started()){
+			try {
+				mysqli_begin_transaction ($this->get_current_connection());
+				$this->set_transaction_started(true);
+			} catch (\mysqli_sql_exception $e){
+				throw new DataConnectionTransactionStartError($this, "Cannot start transaction: " . $e->getMessage(), '6T2T2JM', $e);
+			}
 		}
+		return $this;
 	}
 	
 	public function transaction_commit(){
+		// Do nothing if the autocommit option is set for this connection
+		if ($this->get_autocommit()){
+			return $this;
+		}
+		
 		try {
 			return mysqli_commit($this->get_current_connection());
 		} catch (\mysqli_sql_exception $e){
 			throw new DataConnectionCommitFailedError($this, "Commit failed: " . $e->getMessage(), '6T2T2O9', $e);
 		}
+		return $this;
 	}
 	
 	public function transaction_rollback(){
+		// Throw error if trying to rollback a transaction with autocommit enabled
+		if ($this->get_autocommit()){
+			throw new DataConnectionRollbackFailedError($this, 'Cannot rollback transaction in "' . $this->get_alias_with_namespace() . '": The autocommit options is set to TRUE for this connection!');
+		}
+		
 		try {
 			return mysqli_rollback($this->get_current_connection());
 		} catch (\mysqli_sql_exception $e){
 			throw new DataConnectionRollbackFailedError($this, "Rollback failed: " . $e->getMessage(), '6T2T2S1', $e);
 		}
+		return $this;
 	}
 	
 	public function free_result(SqlDataQuery $query){

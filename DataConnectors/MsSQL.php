@@ -129,9 +129,9 @@ class MsSQL extends AbstractSqlConnector {
 	}
 	
 	public function transaction_rollback(){
-		// Do nothing if the autocommit option is set for this connection
+		// Throw error if trying to rollback a transaction with autocommit enabled
 		if ($this->get_autocommit()){
-			return $this;
+			throw new DataConnectionRollbackFailedError($this, 'Cannot rollback transaction in "' . $this->get_alias_with_namespace() . '": The autocommit options is set to TRUE for this connection!');
 		}
 		
 		if (!sqlsrv_begin_transaction($this->get_current_connection())){

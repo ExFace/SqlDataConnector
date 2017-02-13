@@ -124,6 +124,7 @@ class OracleSQL extends AbstractSqlConnector {
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::transaction_start()
 	 */
 	public function transaction_start(){
+		$this->set_transaction_started(true);
 		return $this;
 	}
 	
@@ -140,9 +141,9 @@ class OracleSQL extends AbstractSqlConnector {
 	}
 	
 	public function transaction_rollback(){
-		// Do nothing if the autocommit option is set for this connection
+		// Throw error if trying to rollback a transaction with autocommit enabled
 		if ($this->get_autocommit()){
-			return $this;
+			throw new DataConnectionRollbackFailedError($this, 'Cannot rollback transaction in "' . $this->get_alias_with_namespace() . '": The autocommit options is set to TRUE for this connection!');
 		}
 		
 		if (!oci_rollback($this->get_current_connection())){

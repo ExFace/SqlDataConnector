@@ -154,6 +154,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 							$this->get_data_connection()->run_sql($statement);
 						}
 					}
+					$this->get_data_connection()->transaction_commit();
 					$updates_installed[] = $id;
 				} catch (\Throwable $e){
 					$updates_failed[] = $id;

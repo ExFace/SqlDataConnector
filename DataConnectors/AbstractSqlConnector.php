@@ -14,7 +14,7 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 
 	private $current_connection;
 	private $connected;
-	private $autocommit = true;
+	private $autocommit = false;
 	private $transaction_started = false;
 	private $user = null;
 	private $password = null;
@@ -25,7 +25,7 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 	/**
 	 * @return boolean
 	 */
-	protected function get_autocommit() {
+	public function get_autocommit() {
 		return $this->autocommit;
 	}
 	
@@ -33,15 +33,8 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 	 * 
 	 * @param boolean $value
 	 */
-	protected function set_autocommit($value) {
-		if (is_numeric($value)){
-			$value = $value == 0 ? false : true;
-		} elseif (strcasecmp($value, 'false') == 0){
-			$value = false;
-		} else {
-			$value = true;
-		}
-		$this->autocommit = $value;
+	public function set_autocommit($value) {
+		$this->autocommit = $value ? true : false;
 		return $this;
 	}
 	
@@ -79,7 +72,7 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 	}
 	
 	public function set_transaction_started($value) {
-		$this->transaction_started = $value;
+		$this->transaction_started = $value ? true : false;
 		return $this;
 	} 
 	
