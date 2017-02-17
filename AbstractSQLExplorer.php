@@ -33,7 +33,7 @@ abstract class AbstractSQLExplorer {
 			case 'TIMESTAMP': 
 			case 'DATETIME': $data_type_alias = 'Timestamp'; break;
 			case 'DATE': $data_type_alias = 'Date'; break;
-			case 'TEXT': $data_type_alias = 'Text'; break;
+			case 'TEXT': case 'LONGTEXT': $data_type_alias = 'Text'; break;
 			default: $data_type_alias = 'String';
 		}
 		return $data_type_alias;
