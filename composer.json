@@ -1,5 +1,5 @@
 {
-    "name": "ExFace/SqlDataConnector",
+    "name": "exface/SqlDataConnector",
     "description": "Data connector for SQL databases for the ExFace business web application plattform",
     "type": "library",
     "license": "GPL-3.0+",
