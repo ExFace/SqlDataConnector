@@ -90,7 +90,7 @@
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2T2JM",
             "ERROR_TEXT": "Cannot start transaction",
-            "DESCRIPTION": null,
+            "DESCRIPTION": "",
             "LABEL": "exface.SqlDataConnector.6T2T2JM"
         },
         {
@@ -103,7 +103,7 @@
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2T2O9",
             "ERROR_TEXT": "Cannot commit transaction",
-            "DESCRIPTION": null,
+            "DESCRIPTION": "",
             "LABEL": "exface.SqlDataConnector.6T2T2O9"
         },
         {
@@ -116,7 +116,7 @@
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2T2S1",
             "ERROR_TEXT": "Cannot rollback transaction",
-            "DESCRIPTION": null,
+            "DESCRIPTION": "",
             "LABEL": "exface.SqlDataConnector.6T2T2S1"
         },
         {
@@ -129,7 +129,7 @@
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2T2UI",
             "ERROR_TEXT": "SQL query failed",
-            "DESCRIPTION": null,
+            "DESCRIPTION": "",
             "LABEL": "exface.SqlDataConnector.6T2T2UI"
         },
         {
@@ -142,7 +142,7 @@
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2TBVR",
             "ERROR_TEXT": "Cannot connect to database",
-            "DESCRIPTION": null,
+            "DESCRIPTION": "",
             "LABEL": "exface.SqlDataConnector.6T2TBVR"
         },
         {
@@ -155,7 +155,7 @@
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2TCAJ",
             "ERROR_TEXT": "Cannot get last insert id from database",
-            "DESCRIPTION": null,
+            "DESCRIPTION": "",
             "LABEL": "exface.SqlDataConnector.6T2TCAJ"
         },
         {
@@ -168,7 +168,7 @@
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T2TCL6",
             "ERROR_TEXT": "Cannot  count rows affected by query",
-            "DESCRIPTION": null,
+            "DESCRIPTION": "",
             "LABEL": "exface.SqlDataConnector.6T2TCL6"
         },
         {
@@ -181,7 +181,7 @@
             "APP": "0x11e6affb715baea58943e4b318306b9a",
             "ERROR_CODE": "6T5U304",
             "ERROR_TEXT": "Unsupported data connector for SQL reverse engineering. Currently supported are MySQL, Oracle SQL and Microsoft SQL",
-            "DESCRIPTION": null,
+            "DESCRIPTION": "",
             "LABEL": "exface.SqlDataConnector.6T5U304"
         }
     ],
