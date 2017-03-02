@@ -400,7 +400,8 @@ class SqlModelLoader implements ModelLoaderInterface {
 	
 	public function load_action(AppInterface $app, $action_alias){
 		$sql_where = 'a.app_alias = "' . $app->get_alias_with_namespace() . '" AND oa.alias = "' . $action_alias . '"';
-		return $this->load_actions_from_model(new AppActionList($app->get_workbench(), $app), $sql_where)->get_first();
+		$actions = $this->load_actions_from_model(new AppActionList($app->get_workbench(), $app), $sql_where);
+		return $actions->get_first();
 	}
 	
 	/**
@@ -420,6 +421,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 					oa.name, 
 					oa.short_description, 
 					oa.config_uxon, 
+					oa.use_in_object_basket_flag, 
 					a.app_alias
 				FROM exf_object_action oa LEFT JOIN exf_app a ON a.oid = oa.action_app_oid
 				WHERE ' . $sql_where);
