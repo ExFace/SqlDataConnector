@@ -19,6 +19,7 @@ use exface\Core\CommonLogic\Model\ActionList;
 use exface\Core\CommonLogic\Model\AppActionList;
 use exface\Core\Factories\ActionFactory;
 use exface\Core\Interfaces\AppInterface;
+use exface\Core\Interfaces\WidgetInterface;
 
 class SqlModelLoader implements ModelLoaderInterface {
 	private $data_connection = null;
@@ -398,9 +399,9 @@ class SqlModelLoader implements ModelLoaderInterface {
 		return $this->load_actions_from_model($empty_list, $sql_where);
 	}
 	
-	public function load_action(AppInterface $app, $action_alias){
+	public function load_action(AppInterface $app, $action_alias, WidgetInterface $called_by_widget = null){
 		$sql_where = 'a.app_alias = "' . $app->get_alias_with_namespace() . '" AND oa.alias = "' . $action_alias . '"';
-		$actions = $this->load_actions_from_model(new AppActionList($app->get_workbench(), $app), $sql_where);
+		$actions = $this->load_actions_from_model(new AppActionList($app->get_workbench(), $app), $sql_where, $called_by_widget);
 		return $actions->get_first();
 	}
 	
@@ -410,7 +411,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 	 * @param string $sql_where
 	 * @return \exface\Core\CommonLogic\Model\ActionList
 	 */
-	protected function load_actions_from_model(ActionList $action_list, $sql_where){
+	protected function load_actions_from_model(ActionList $action_list, $sql_where, WidgetInterface $called_by_widget = null){
 		$basket_aliases = ($action_list instanceof ObjectActionList) ? $action_list->get_object_basket_action_aliases() : array();
 		
 		$query = $this->get_data_connection()->run_sql('
