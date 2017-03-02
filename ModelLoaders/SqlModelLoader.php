@@ -414,7 +414,13 @@ class SqlModelLoader implements ModelLoaderInterface {
 		
 		$query = $this->get_data_connection()->run_sql('
 				SELECT
-					oa.*, a.app_alias
+					' . $this->generate_sql_uuid_selector('oa.object_oid') . ' AS object_oid,
+					oa.action, 
+					oa.alias, 
+					oa.name, 
+					oa.short_description, 
+					oa.config_uxon, 
+					a.app_alias
 				FROM exf_object_action oa LEFT JOIN exf_app a ON a.oid = oa.action_app_oid
 				WHERE ' . $sql_where);
 		if($res = $query->get_result_array()){
@@ -422,7 +428,9 @@ class SqlModelLoader implements ModelLoaderInterface {
 				if ($row['config_uxon']){
 					$action_uxon = UxonObject::from_anything($row['config_uxon']);
 				}
-				$a = ActionFactory::create_from_model($row['action'], $row['alias'], $action_list->get_workbench()->get_app($row['app_alias']), $action_uxon);
+				$app = $action_list->get_workbench()->get_app($row['app_alias']);
+				$object = $action_list instanceof ObjectActionList ? $action_list->get_meta_object() : $action_list->get_workbench()->model()->get_object_by_id($row['object_oid']);
+				$a = ActionFactory::create_from_model($row['action'], $row['alias'], $app, $object, $action_uxon);
 				$a->set_name($row['name']);
 				$action_list->add($a);
 				
