@@ -34,7 +34,7 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 	 * @param boolean $value
 	 */
 	public function set_autocommit($value) {
-		$this->autocommit = $value ? true : false;
+		$this->autocommit = filter_var($value, FILTER_VALIDATE_BOOLEAN);
 		return $this;
 	}
 	
@@ -72,7 +72,7 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 	}
 	
 	public function set_transaction_started($value) {
-		$this->transaction_started = $value ? true : false;
+		$this->transaction_started = filter_var($value, FILTER_VALIDATE_BOOLEAN);
 		return $this;
 	} 
 	
