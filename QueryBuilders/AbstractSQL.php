@@ -11,7 +11,6 @@ use exface\Core\CommonLogic\Model\RelationPath;
 use exface\Core\Exceptions\DataTypeValidationError;
 use exface\Core\DataTypes\NumberDataType;
 use exface\SqlDataConnector\DataConnectors\AbstractSqlConnector;
-use exface\Core\DataTypes\BooleanDataType;
 
 /**
  * A query builder for oracle SQL.
