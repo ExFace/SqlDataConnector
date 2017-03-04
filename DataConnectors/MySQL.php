@@ -246,7 +246,7 @@ class MySQL extends AbstractSqlConnector {
 	 * @return MySQL
 	 */
 	public function set_use_persistant_connection($value) {
-		$this->use_persistant_connection = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+		$this->use_persistant_connection = \exface\Core\DataTypes\BooleanDataType::parse($value);
 		return $this;
 	}  
 	
