@@ -11,6 +11,7 @@ use exface\Core\CommonLogic\Model\RelationPath;
 use exface\Core\Exceptions\DataTypeValidationError;
 use exface\Core\DataTypes\NumberDataType;
 use exface\SqlDataConnector\DataConnectors\AbstractSqlConnector;
+use exface\Core\DataTypes\BooleanDataType;
 
 /**
  * A query builder for oracle SQL.
@@ -346,11 +347,11 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	 * @return string
 	 */
 	protected function prepare_input_value($value, AbstractDataType $data_type, $sql_data_type = NULL){
-		
+		$value = $data_type::parse($value);
 		if ($data_type->is(EXF_DATA_TYPE_STRING)){
 			$value = "'" . $this->escape_string($value) . "'";
 		} elseif ($data_type->is(EXF_DATA_TYPE_BOOLEAN)){
-			$value = ($value == "false" || $value == "FALSE" || !$value ? 0 : 1);
+			$value = $value ? 1 : 0;
 		} elseif ($data_type->is(EXF_DATA_TYPE_NUMBER)){
 			$value = ($value == '' ? 'NULL' : $value ); 
 		} elseif ($data_type->is(EXF_DATA_TYPE_DATE)){
@@ -772,7 +773,6 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		// also use equals for the BOOLEAN data type
 		elseif ($attr->get_data_type()->is(EXF_DATA_TYPE_BOOLEAN) && $comp == EXF_COMPARATOR_IS) {
 			$comp = EXF_COMPARATOR_EQUALS;
-			$val = $this->prepare_input_value($val, $attr->get_data_type());
 		}
 
 		$select = $attr->get_data_address();
@@ -852,7 +852,11 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	
 	protected function prepare_where_value($value, AbstractDataType $data_type, $sql_data_type = NULL){
 		// IDEA some data type specific procession here
-		$output = $value;
+		if ($data_type->is(EXF_DATA_TYPE_BOOLEAN)){
+			$output = $value ? 1 : 0;
+		} else {
+			$output = $value;
+		}
 		return $output;
 	}
 	
