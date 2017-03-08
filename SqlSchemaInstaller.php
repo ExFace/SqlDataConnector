@@ -131,54 +131,50 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 	 * @param string $source_absolute_path
 	 * @return string
 	 */
-	protected function perform_model_source_update($source_absolute_path){
-		
-		$updates_folder = $this->get_sql_folder_absolute_path($source_absolute_path) . DIRECTORY_SEPARATOR . $this->get_sql_updates_folder_name();
-		$id_installed = $this->get_app()->get_config()->get_option('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID');
-		$updates_installed = array();
-		$updates_failed = array();
-		
-		foreach (scandir($updates_folder, SCANDIR_SORT_ASCENDING) as $file){
-			if ($file == '.' || $file == '..') continue;
-			$id = intval(substr($file, 0, 4));
-			if ($id > $id_installed){
-				if (count($updates_failed) > 1){
-					$updates_failed[] = $id;
-					continue;
-				}
-				$sql = file_get_contents($updates_folder . DIRECTORY_SEPARATOR . $file);
-				$sql = trim(preg_replace('/\s+/', ' ', $sql));
-				try {
-					foreach (explode(';', $sql) as $statement){
-						if ($statement){
-							$this->get_data_connection()->run_sql($statement);
-						}
-					}
-					$this->get_data_connection()->transaction_commit();
-					$updates_installed[] = $id;
-				} catch (\Throwable $e){
-					$updates_failed[] = $id;
-				} finally {
-					$updates_failed[] = $id;
-				}
-			}
-				
-		}
-		// Save the last id in order to skip installed ones next time
-		if (count($updates_installed) > 0){
-			$this->set_last_model_source_update_id(end($updates_installed));
-		}
-			
-		$result = "\n";
-		if (count($updates_installed) > 0){
-			$result .= 'Installed ' . count($updates_installed) . ' model source updates';
-		}
-		if (count($updates_failed) > 0){
-			$result .= ' (' . count($updates_failed) . ' updates failed)';
-		}
-	
-		return $result;
-	}
+    protected function perform_model_source_update($source_absolute_path){
+
+        $updates_folder = $this->get_sql_folder_absolute_path($source_absolute_path) . DIRECTORY_SEPARATOR . $this->get_sql_updates_folder_name();
+        $id_installed = $this->get_app()->get_config()->get_option('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID');
+
+        $updates_installed = array();
+        $updates_failed_id = null;
+
+        $updateFolderDirScan = array_diff(scandir($updates_folder, SCANDIR_SORT_ASCENDING), array('..', '.'));
+        foreach ($updateFolderDirScan as $file){
+            $id = intval(substr($file, 0, 4));
+            if ($id > $id_installed){
+                if( $updates_failed_id ){
+                    break; //no further updates!
+                }
+                $sql = file_get_contents($updates_folder . DIRECTORY_SEPARATOR . $file);
+                $sql = trim(preg_replace('/\s+/', ' ', $sql));
+                try {
+                    foreach (explode(';', $sql) as $statement){
+                        if ($statement){
+                            $this->get_data_connection()->run_sql($statement);
+                        }
+                    }
+                    $this->get_data_connection()->transaction_commit();
+                    $updates_installed[] = $id;
+                } catch (\Throwable $e){
+                    $updates_failed_id = $id;
+                }
+            }
+        }
+        // Save the last id in order to skip installed ones next time
+        if (count($updates_installed) > 0){
+            $this->set_last_model_source_update_id(end($updates_installed));
+        }
+
+        $result = "\n";
+        if (count($updates_installed) > 0){
+            $result .= 'Installed ' . count($updates_installed) . ' model source updates';
+        }
+        if( $updates_failed_id ){
+            $result .= ' (update ' . $updates_failed_id . ' has failed)';
+        }
+        return $result;
+    }
 	
 	protected function set_last_model_source_update_id($id){
 		$filename = $this->get_workbench()->filemanager()->get_path_to_config_folder() . DIRECTORY_SEPARATOR . $this->get_app()->get_config_file_name();
