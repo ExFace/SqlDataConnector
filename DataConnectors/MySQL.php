@@ -27,8 +27,7 @@ class MySQL extends AbstractSqlConnector {
 		$safe_count = 0;
 		$conn = null;
 		
-		// Make mysqli produce exceptions instead of errors
-		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+		$this->enable_error_exceptions();
 		
 		while(!$conn && $safe_count<3) {
 			try {
@@ -260,6 +259,23 @@ class MySQL extends AbstractSqlConnector {
 		$uxon->set_property('dbase', $this->get_dbase());
 		$uxon->set_property('use_persistant_connection', $this->get_use_persistant_connection());
 		return $uxon;
+	}
+	
+	protected function enable_error_exceptions(){
+		// Make mysqli produce exceptions instead of errors
+		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+	}
+	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::set_current_connection()
+	 */
+	protected function set_current_connection($mysqli_connection_instance){
+		if (!($mysqli_connection_instance instanceof \mysqli)){
+			throw new DataConnectionFailedError($this, 'Connection to MySQL failed: instance of \mysqli expected, "' . gettype($mysqli_connection_instance) . '" given instead!');
+		}
+		parent::set_current_connection($mysqli_connection_instance);
 	}
 	  
 }

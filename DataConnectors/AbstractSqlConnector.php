@@ -4,6 +4,7 @@ use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Interfaces\DataSources\DataQueryInterface;
+use exface\Core\DataTypes\BooleanDataType;
 
 /**
  * 
@@ -52,7 +53,7 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 		return $this->current_connection;
 	}
 	
-	public function set_current_connection($value) {
+	protected function set_current_connection($value) {
 		$this->current_connection = $value;
 		$this->set_connected(true);
 		return $this;
@@ -62,8 +63,8 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 		return $this->connected;
 	}
 	
-	public function set_connected($value) {
-		$this->connected = $value;
+	protected function set_connected($value) {
+		$this->connected = BooleanDataType::parse($value);
 		return $this;
 	}
 	
@@ -71,7 +72,7 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 		return $this->transaction_started;
 	}
 	
-	public function set_transaction_started($value) {
+	protected function set_transaction_started($value) {
 		$this->transaction_started = \exface\Core\DataTypes\BooleanDataType::parse($value);
 		return $this;
 	} 
