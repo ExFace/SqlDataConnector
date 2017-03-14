@@ -51,9 +51,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 	 * @see \exface\Core\Interfaces\InstallerInterface::uninstall()
 	 */
 	public function uninstall(){
-		// Remove index-exface.php to the root of the MODx installation
-		$this->get_workbench()->filemanager()->remove($this->get_app()->get_modx_ajax_index_path());
-		return "\nRemoved " . $this->get_app()->get_modx_ajax_index_path() . '.'; 
+		return 'Automatic uninstaller not implemented for' . $this->get_name_resolver()->get_alias_with_namespace() . '!';
 	}
 	
 	/**
@@ -144,7 +142,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 		foreach ($updateFolderDirScan as $file){
 			$id = intval(substr($file, 0, 4));
 			if ($id > $id_installed){
-				if (count($updates_failed) > 1){
+				if (count($updates_failed) > 0){
 					$updates_failed[] = $id;
 					continue;
 				}

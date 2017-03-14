@@ -20,6 +20,8 @@ use exface\Core\CommonLogic\Model\AppActionList;
 use exface\Core\Factories\ActionFactory;
 use exface\Core\Interfaces\AppInterface;
 use exface\Core\Interfaces\WidgetInterface;
+use exface\SqlDataConnector\SqlSchemaInstaller;
+use exface\Core\CommonLogic\NameResolver;
 
 class SqlModelLoader implements ModelLoaderInterface {
 	private $data_connection = null;
@@ -449,6 +451,13 @@ class SqlModelLoader implements ModelLoaderInterface {
 		
 		return $action_list;
 	}
+	
+	public function get_installer(){
+		$installer = new SqlSchemaInstaller(NameResolver::create_from_string('exface.SqlDataConnector', NameResolver::OBJECT_TYPE_APP, $this->get_data_connection()->get_workbench()));
+		$installer->set_data_connection($this->get_data_connection());
+		return $installer;
+	}	
+	  
 }
 
 ?>

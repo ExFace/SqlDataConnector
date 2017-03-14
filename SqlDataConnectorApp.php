@@ -53,13 +53,14 @@ class SqlDataConnectorApp extends AbstractApp {
 		$installer = parent::get_installer($injected_installer);
 		
 		// First of all update the meta model source schema if the model is stored in SQL (= if the connector 
-		// used by the model loader is an SQL connector). This needst ot be done before any other installers are run -
+		// used by the model loader is an SQL connector). This needs to be done before any other installers are run -
 		// in particular before the model installer, because the model installer will attempt to write to the new
 		// SQL schema already!
-		if ($this->get_workbench()->model()->get_model_loader()->get_data_connection() instanceof SqlDataConnectorInterface) {
-			$model_installer = new SqlSchemaInstaller($this->get_name_resolver());
-			$model_installer->set_data_connection($this->get_workbench()->model()->get_model_loader()->get_data_connection());
-			$installer->add_installer($model_installer, true);
+		// Although the core app will update it's model schema by itself, this step is also needed here, because the 
+		// schema updates or fixes may come asynchronously to core app updates. If the core app already udated the
+		// schema, the installer won't do anything, so we will not run into conflicts.
+		if ($this->contains_class($this->get_workbench()->model()->get_model_loader())) {
+			$installer->add_installer($this->get_workbench()->model()->get_model_loader()->get_installer(), true);
 		}
 		return $installer;
 	}
