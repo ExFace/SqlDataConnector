@@ -1,0 +1,4 @@
+{
+	"SCHEMA_INSTALLER.SUCCESS": "%counter% SQL-schema-update installed|%counter% SQL-schema-updates installed",
+	"SCHEMA_INSTALLER.FAILED": "SQL-schema-update %first_failed_id% failed: %error_text%|%counter% SQL-schema-updates failed starting with update %first_failed_id%: %error_text%"
+}

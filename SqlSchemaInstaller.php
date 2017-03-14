@@ -135,11 +135,13 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 		
 		$updates_folder = $this->get_sql_folder_absolute_path($source_absolute_path) . DIRECTORY_SEPARATOR . $this->get_sql_updates_folder_name();
 		$id_installed = $this->get_app()->get_config()->get_option('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID');
+		
 		$updates_installed = array();
 		$updates_failed = array();
+		$error_text = '';
 		
-		foreach (scandir($updates_folder, SCANDIR_SORT_ASCENDING) as $file){
-			if ($file == '.' || $file == '..') continue;
+		$updateFolderDirScan = array_diff(scandir($updates_folder, SCANDIR_SORT_ASCENDING), array('..', '.'));
+		foreach ($updateFolderDirScan as $file){
 			$id = intval(substr($file, 0, 4));
 			if ($id > $id_installed){
 				if (count($updates_failed) > 1){
@@ -149,6 +151,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 				$sql = file_get_contents($updates_folder . DIRECTORY_SEPARATOR . $file);
 				$sql = trim(preg_replace('/\s+/', ' ', $sql));
 				try {
+					$this->get_data_connection()->transaction_start();
 					foreach (explode(';', $sql) as $statement){
 						if ($statement){
 							$this->get_data_connection()->run_sql($statement);
@@ -158,9 +161,8 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 					$updates_installed[] = $id;
 				} catch (\Throwable $e){
 					$updates_failed[] = $id;
-				} finally {
-					$updates_failed[] = $id;
-				}
+					$error_text = $e->getMessage();
+				} 
 			}
 				
 		}
@@ -169,13 +171,19 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 			$this->set_last_model_source_update_id(end($updates_installed));
 		}
 			
-		$result = "\n";
-		if (count($updates_installed) > 0){
-			$result .= 'Installed ' . count($updates_installed) . ' model source updates';
+		if ($installed_counter = count($updates_installed)){
+			$result = $this->get_sql_connector_app()->get_translator()->translate('SCHEMA_INSTALLER.SUCCESS', array('%counter%' => $installed_counter), $installed_counter);
 		}
-		if (count($updates_failed) > 0){
-			$result .= ' (' . count($updates_failed) . ' updates failed)';
+		if ($failed_counter = count($updates_failed)){
+			$result_failed = $this->get_sql_connector_app()->get_translator()->translate('SCHEMA_INSTALLER.FAILED', array('%counter%' => $failed_counter, '%first_failed_id%' => reset($updates_failed), '%first_failed_text%' => $error_text), $failed_counter);
 		}
+		
+		if ($result && $result_failed){
+			$result = $result . '. ' . $result_failed;
+		} elseif ($result_failed){
+			$result = $result_failed;
+		}
+		$result = $result ? " \n" . $result . '. ' : $result;
 	
 		return $result;
 	}
@@ -194,6 +202,14 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 		file_put_contents($filename, $config->export_uxon_object()->to_json(true));
 	
 		return $this;
+	}
+	
+	/**
+	 * 
+	 * @return SqlDataConnectorApp
+	 */
+	protected function get_sql_connector_app(){
+		return $this->get_workbench()->get_app('exface.SqlDataConnector');
 	}
 }
 ?>
