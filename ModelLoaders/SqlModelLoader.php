@@ -140,6 +140,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 							$label_attribute['attribute_alias'] = $object->get_model()->get_workbench()->get_config()->get_option('OBJECT_LABEL_ALIAS');
 							$label_attribute['attribute_hidden_flag'] = '1';
 							$label_attribute['attribute_required_flag'] = '0';
+							$label_attribute['attribute_editable_flag'] = '0';
 							// The special label attribute should not be marked as label because it then would be returned by get_label..(),
 							// which instead should return the original attribute
 							$label_attribute['object_label_flag'] = 0;
@@ -269,9 +270,6 @@ class SqlModelLoader implements ModelLoaderInterface {
 			$uxon = new UxonObject();
 			$uxon->set_property('widget_type', $model->get_workbench()->get_config()->get_option('WIDGET_FOR_UNKNOWN_DATA_TYPES'));
 		}
-		// Add some attribute specific values
-		$uxon->caption = $attr->get_name();
-		$uxon->hint = $attr->get_hint();
 		// Extend by the specific uxon for this attribute if specified
 		if ($row['default_editor_uxon']){
 			$uxon = $uxon->extend(UxonObject::from_json($row['default_editor_uxon']));
