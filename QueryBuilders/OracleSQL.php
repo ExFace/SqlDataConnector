@@ -447,7 +447,7 @@ class OracleSQL extends AbstractSQL {
 				$uid_qpart = $qpart;
 			}
 				
-			$columns[] = $attr->get_data_address();
+			$columns[$attr->get_data_address()] = $attr->get_data_address();
 			$custom_insert_sql = $qpart->get_data_address_property('SQL_INSERT');
 			foreach ($qpart->get_values() as $row => $value){
 				if ($custom_insert_sql && (is_null($value) || $value === '')){
@@ -455,9 +455,9 @@ class OracleSQL extends AbstractSQL {
 					// Otherwise there would not be any possibility to save explicit values
 					// FIXME using custom insert SQL _or_ value makes it impossible to create SQL wrappers for values. Perhaps a better way
 					// would be to write an IF-SQL-statement here?
-					$values[$row][] = str_replace(array('[#alias#]', '[#value#]'), array($this->get_main_object()->get_alias(), $value), $custom_insert_sql);
+					$values[$row][$attr->get_data_address()] = str_replace(array('[#alias#]', '[#value#]'), array($this->get_main_object()->get_alias(), $value), $custom_insert_sql);
 				} else {
-					$values[$row][] = $this->prepare_input_value($value, $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
+					$values[$row][$attr->get_data_address()] = $this->prepare_input_value($value, $attr->get_data_type(), $attr->get_data_address_property('SQL_DATA_TYPE'));
 				}
 			}
 		}
