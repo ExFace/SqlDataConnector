@@ -117,7 +117,7 @@ class MySQL extends AbstractSQL {
 		$distinct = $this->get_select_distinct() ? 'DISTINCT ' : '';
 		
 		if ($this->get_limit()){
-			$limit = ' LIMIT ' . $this->get_offset() . ', ' . $this->get_limit();
+			$limit = ' LIMIT ' . $this->get_limit() . ' OFFSET ' . $this->get_offset();
 		}
 			
 		if (($group_by && $where) || $this->get_select_distinct()){
