@@ -7,6 +7,7 @@ use exface\Core\Exceptions\DataSources\DataConnectionCommitFailedError;
 use exface\Core\Exceptions\DataSources\DataConnectionRollbackFailedError;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
+use exface\SqlDataConnector\SqlExplorer\MSSQLExplorer;
 
 /** 
  * Datbase API object of Microsoft SQL Server
@@ -228,6 +229,15 @@ class MsSQL extends AbstractSqlConnector {
 		$uxon->set_property('Database', $this->get_Database());
 		return $uxon;
 	}	
+	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::get_sql_explorer()
+	 */
+	public function get_sql_explorer(){
+		return new MSSQLExplorer($this);
+	}
 	      
 }
 ?>

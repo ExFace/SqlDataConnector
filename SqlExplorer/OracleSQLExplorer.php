@@ -1,4 +1,4 @@
-<?php namespace exface\SqlDataConnector;
+<?php namespace exface\SqlDataConnector\SqlExplorer;
 
 use exface\Core\CommonLogic\Model\Object;
 
@@ -26,7 +26,7 @@ class OracleSQLExplorer extends AbstractSQLExplorer {
 			$rows[] = array(
 					'LABEL' => $this->generate_label($col['COLUMN_NAME']),
 					'ALIAS' => $col['COLUMN_NAME'],
-					'DATATYPE' => $this->get_app()->get_data_type_id($this->get_data_type($col['DATA_TYPE'], ($col['DATA_PRECISION'] ? $col['DATA_PRECISION'] : $col['DATA_LENGTH']), $col['DATA_SCALE'])),
+					'DATATYPE' => $this->get_data_type_id($this->get_data_type($col['DATA_TYPE'], ($col['DATA_PRECISION'] ? $col['DATA_PRECISION'] : $col['DATA_LENGTH']), $col['DATA_SCALE'])),
 					'DATA_ADDRESS' => $col['COLUMN_NAME'],
 					'OBJECT' => $meta_object->get_id(),
 					'REQUIREDFLAG' => ($col['NULLABLE'] == 'N' ? 1 : 0),

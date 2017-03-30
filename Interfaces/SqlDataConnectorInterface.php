@@ -39,6 +39,13 @@ interface SqlDataConnectorInterface extends DataConnectionInterface {
 	 * @return void
 	 */
 	public function free_result(SqlDataQuery $query);
+	
+	/**
+	 * Returns an instance of SQL explorer for this connection
+	 * 
+	 * @return SqlExplorerInterface
+	 */
+	public function get_sql_explorer();
 }
 
 ?>

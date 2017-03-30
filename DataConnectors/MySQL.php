@@ -7,6 +7,7 @@ use exface\Core\Exceptions\DataSources\DataConnectionCommitFailedError;
 use exface\Core\Exceptions\DataSources\DataConnectionRollbackFailedError;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
+use exface\SqlDataConnector\SqlExplorer\MySQLExplorer;
 
 /** 
  * Data source connector for MySQL databases 
@@ -276,6 +277,15 @@ class MySQL extends AbstractSqlConnector {
 			throw new DataConnectionFailedError($this, 'Connection to MySQL failed: instance of \mysqli expected, "' . gettype($mysqli_connection_instance) . '" given instead!');
 		}
 		parent::set_current_connection($mysqli_connection_instance);
+	}
+	
+	/**
+	 *
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::get_sql_explorer()
+	 */
+	public function get_sql_explorer(){
+		return new MySQLExplorer($this);
 	}
 	  
 }

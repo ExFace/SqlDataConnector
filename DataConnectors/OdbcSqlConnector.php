@@ -179,7 +179,6 @@ class OdbcSqlConnector extends AbstractSqlConnector {
 	public function set_dsn($value) {
 		$this->dsn = $value;
 		return $this;
-	}  
-	  
+	}	  
 }
 ?>

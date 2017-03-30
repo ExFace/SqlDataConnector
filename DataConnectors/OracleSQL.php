@@ -6,6 +6,7 @@ use exface\Core\Exceptions\DataSources\DataConnectionCommitFailedError;
 use exface\Core\Exceptions\DataSources\DataConnectionRollbackFailedError;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
+use exface\SqlDataConnector\SqlExplorer\OracleSQLExplorer;
 
 /**
  * Datbase API object of OracleSQL
@@ -196,6 +197,15 @@ class OracleSQL extends AbstractSqlConnector {
 		$uxon = parent::export_uxon_object();
 		$uxon->set_property('sid', $this->get_sid());
 		return $uxon;
+	}
+	
+	/**
+	 *
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\DataConnectors\AbstractSqlConnector::get_sql_explorer()
+	 */
+	public function get_sql_explorer(){
+		return new OracleSQLExplorer($this);
 	}
 }
 ?>

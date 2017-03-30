@@ -1,4 +1,4 @@
-<?php namespace exface\SqlDataConnector;
+<?php namespace exface\SqlDataConnector\SqlExplorer;
 
 use exface\Core\CommonLogic\Model\Object;
 
@@ -16,7 +16,7 @@ class MySQLExplorer extends AbstractSQLExplorer {
 			$rows[] = array(
 					'LABEL' => $this->generate_label($col['Field']),
 					'ALIAS' => $col['Field'],
-					'DATATYPE' => $this->get_app()->get_data_type_id($this->get_data_type($col['Type'])),
+					'DATATYPE' => $this->get_data_type_id($this->get_data_type($col['Type'])),
 					'DATA_ADDRESS' => $col['Field'],
 					'OBJECT' => $meta_object->get_id(),
 					'REQUIREDFLAG' => ($col['Null'] == 'NO' ? 1 : 0),

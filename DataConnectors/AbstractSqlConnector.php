@@ -5,6 +5,7 @@ use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Interfaces\DataSources\DataQueryInterface;
 use exface\Core\DataTypes\BooleanDataType;
+use exface\Core\Exceptions\NotImplementedError;
 
 /**
  * 
@@ -192,6 +193,14 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
 		$uxon->set_property('autocommit', $this->get_autocommit());
 		return $uxon;
 	}
-
+	
+	/**
+	 * 
+	 * {@inheritDoc}
+	 * @see \exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface::get_sql_explorer()
+	 */
+	public function get_sql_explorer(){
+		throw new NotImplementedError('Cannot create an SQL explorer for a general ODBC connection!');
+	}
 }
 ?>
