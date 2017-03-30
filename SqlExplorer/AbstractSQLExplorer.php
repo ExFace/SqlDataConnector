@@ -71,5 +71,33 @@ abstract class AbstractSQLExplorer implements SqlExplorerInterface {
 	public function get_data_connection(){
 		return $this->data_connector;
 	}
+	
+	/**
+	 * Extracts the DB schema from a qualified table alias (e.g. SCHEMA.TABLE_NAME). Returns an empty string if no schema is found.
+	 * @param string $table_alias
+	 * @return string
+	 */
+	protected static function get_schema_from_alias($table_alias){
+		$parts = explode('.', $table_alias);
+		if (count($parts) > 1){
+			return $parts[0];
+		} else {
+			return '';
+		}
+	}
+	
+	/**
+	 * Extracts the table name from a qualified table alias (e.g. SCHEMA.TABLE_NAME). Returns the unchanged alias if no schema is found.
+	 * @param string $table_alias
+	 * @return string
+	 */
+	protected static function get_table_name_from_alias($table_alias){
+		$parts = explode('.', $table_alias);
+		if (count($parts) > 1){
+			return $parts[1];
+		} else {
+			return $parts[0];
+		}
+	}
 }
 ?>

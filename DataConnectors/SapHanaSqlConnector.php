@@ -7,7 +7,7 @@ use exface\SqlDataConnector\SqlExplorer\SapHanaSQLExplorer;
  * 
  * @author Andrej Kabachnik
  */
-class SqpHanaSqlConnector extends OdbcSqlConnector {
+class SapHanaSqlConnector extends OdbcSqlConnector {
 	
 	/**
 	 *

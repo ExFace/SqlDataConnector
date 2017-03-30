@@ -5,7 +5,7 @@ use exface\Core\CommonLogic\Model\Object;
 class SapHanaSQLExplorer extends AbstractSQLExplorer {
 	
 	public function get_attribute_properties_from_table(Object $meta_object, $table_name){
-		$columns_sql = "SELECT * FROM TABLE_COLUMNS WHERE SCHEMA_NAME = 'SCM' AND TABLE_NAME = '" . $table_name . "' ORDER BY POSITION";
+		$columns_sql = "SELECT * FROM TABLE_COLUMNS WHERE SCHEMA_NAME = '" . static::get_schema_from_alias($table_name) . "' AND TABLE_NAME = '" . static::get_table_name_from_alias($table_name) . "' ORDER BY POSITION";
 			
 		// TODO check if it is the right data connector
 		$columns_array = $meta_object->get_data_connection()->run_sql($columns_sql)->get_result_array();
@@ -23,16 +23,5 @@ class SapHanaSQLExplorer extends AbstractSQLExplorer {
 		}
 		return $rows;
 	}	
-	
-	public function get_data_type($data_type, $length = null, $number_scale = null){
-		$data_type = trim($data_type);
-		$details = array();
-		$type = substr($data_type, strpos($data_type, '('));
-		if (strpos($data_type, '(') !== false){
-			$details = explode(',', substr($data_type, (strpos($data_type, '('))+1, (strlen($data_type) - strrpos($data_type, ')'))));
-		}
-		
-		return parent::get_data_type($type, $details[0], $details[1]);
-	}
 }
 ?>
