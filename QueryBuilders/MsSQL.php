@@ -82,14 +82,14 @@ class MsSQL extends AbstractSQL {
 				$enrichment_select .= ', ' . $this->build_sql_select($qpart, 'EXFCOREQ', $qpart->get_attribute()->get_object()->get_uid_alias());
 				$group_safe_attribute_aliases[] = $qpart->get_attribute()->get_alias_with_relation_path();
 			}
-			// if we are aggregating, leave only attributes, that have an aggregate function,
+			// If we are not aggregating or the attribute has a group function, add it regulary
 			elseif (!$group_by
 					|| $qpart->get_aggregate_function()
 					|| $this->get_aggregation($qpart->get_alias())){
 				$selects[] = $this->build_sql_select($qpart);
 				$joins = array_merge($joins, $this->build_sql_joins($qpart));
 				$group_safe_attribute_aliases[] = $qpart->get_attribute()->get_alias_with_relation_path();
-			// ...and ones, that are aggregated over or can be assumed unique due to set filters
+			// If aggregating, also add attributes, that are aggregated over or can be assumed unique due to set filters
 			} elseif (in_array($qpart->get_attribute()->get_object()->get_id(), $filter_object_ids) !== false){
 				$rels = $qpart->get_used_relations();
 				$first_rel = false;
@@ -103,7 +103,7 @@ class MsSQL extends AbstractSQL {
 				$enrichment_joins = array_merge($enrichment_joins, $this->build_sql_joins($qpart, 'exfcoreq'));
 				$joins = array_merge($joins, $this->build_sql_joins($qpart));
 				$group_safe_attribute_aliases[] = $qpart->get_attribute()->get_alias_with_relation_path();
-			// ...and ones, that belong directly to objects, we are aggregating over (they can be assumed unique too, since their object is unique per row)
+			// If aggregating, also add attributes, that belong directly to objects, we are aggregating over (they can be assumed unique too, since their object is unique per row)
 			} elseif ($group_by && $this->get_aggregation($qpart->get_attribute()->get_relation_path()->to_string())){
 				$selects[] = $this->build_sql_select($qpart, null, null, null, 'MAX');
 				$joins = array_merge($joins, $this->build_sql_joins($qpart));
