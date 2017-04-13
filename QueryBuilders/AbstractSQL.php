@@ -22,7 +22,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	// CONFIG
 	protected $short_alias_max_length = 30; // maximum length of SELECT AS aliases
 	protected $short_alias_remove_chars = array('.', '>', '<', '-', '(', ')', ':'); // forbidden chars in SELECT AS aliases
-	protected $short_alias_forbidden = array('SIZE', 'SELECT', 'FROM', 'AS', 'PARENT', 'ID', 'LEVEL', 'ORDER'); // forbidden SELECT AS aliases
+	protected $short_alias_forbidden = array('SIZE', 'SELECT', 'FROM', 'AS', 'PARENT', 'ID', 'LEVEL', 'ORDER', 'GROUP'); // forbidden SELECT AS aliases
 	
 	// other vars
 	protected $select_distinct = false;
