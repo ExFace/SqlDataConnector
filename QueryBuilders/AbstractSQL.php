@@ -702,7 +702,9 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 						$right_table_alias = $this->get_short_alias($alias) . $this->get_query_id();
 						$right_obj = $this->get_main_object()->get_related_object($alias);
 						// generate the join sql
-						$joins[$right_table_alias] = "\n " . $rel->get_join_type() . ' JOIN ' . str_replace('[#alias#]', $right_table_alias, $right_obj->get_data_address()) . ' ' . $right_table_alias . ' ON ' . $left_table_alias . '.' . $left_obj->get_attribute($rel->get_foreign_key_alias())->get_data_address() . ' = ' . $right_table_alias . '.' . $rel->get_related_object_key_attribute()->get_data_address();
+						$left_join_on = $this->build_sql_join_side($left_obj->get_attribute($rel->get_foreign_key_alias())->get_data_address(), $left_table_alias);
+						$right_join_on = $this->build_sql_join_side($rel->get_related_object_key_attribute()->get_data_address(), $right_table_alias);
+						$joins[$right_table_alias] = "\n " . $rel->get_join_type() . ' JOIN ' . str_replace('[#alias#]', $right_table_alias, $right_obj->get_data_address()) . ' ' . $right_table_alias . ' ON ' . $left_join_on . ' = ' . $right_join_on;
 						// continue with the related object
 						$left_table_alias = $right_table_alias;
 						$left_obj = $right_obj;
@@ -716,6 +718,16 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			}
 		}
 		return $joins;
+	}
+	
+	protected function build_sql_join_side($data_address, $table_alias){
+		$join_side = $data_address;
+		if ($this->check_for_sql_statement($join_side)){
+			$join_side = str_replace('[#alias#]', $table_alias, $join_side);
+		} else {
+			$join_side = $table_alias . '.' . $join_side;
+		}
+		return $join_side;
 	}
 	
 	/**
