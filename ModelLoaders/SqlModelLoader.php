@@ -290,7 +290,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 				}
 				$join_on = "(dc.oid = " . $data_connection_id_or_alias . " OR dc.alias = " . $data_connection_id_or_alias . ")";
 			} else {
-				$join_on = 'ds.data_connection_oid = dc.oid';
+				$join_on = 'IF (ds.custom_connection_oid IS NOT NULL, ds.custom_connection_oid, ds.default_connection_oid) = dc.oid';
 			}
 			
 			// If there is a user logged in, fetch his specific connctor config (credentials)
