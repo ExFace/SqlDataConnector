@@ -56,13 +56,21 @@ class MsSQL extends AbstractSQL {
 		}
 		$group_by = $group_by ? ' GROUP BY ' . substr($group_by, 2) : '';
 		
-		// If there is a limit in the query, ensure there is an ORDER BY even if no sorters given. If not, add one over the UID
+		// If there is a limit in the query, ensure there is an ORDER BY even if no sorters given.
 		if (sizeof($this->get_sorters()) < 1 && $this->get_limit()){
-			if ($group_by){
-				$order_by .= ', EXFCOREQ.' . $this->get_main_object()->get_uid_attribute()->get_data_address() . ' DESC';
-			} else {
-				$order_by .= ', ' . $this->get_main_object()->get_uid_attribute()->get_data_address() . ' DESC';
-			}
+			// If no order is specified, sort sort over the UID of the meta object
+			if ($this->get_main_object()->has_uid_attribute()){
+				$order_by .= ', ' . ($group_by ? 'EXFCOREQ.' : '') . $this->get_main_object()->get_uid_attribute()->get_data_address() . ' DESC';
+			} 
+			// If the object has no UID, sort over the first column in the query, which is not an SQL statement itself
+			else {
+				foreach ($this->get_attributes() as $qpart){
+					if (!$this->check_for_sql_statement($qpart->get_data_address())){
+						$order_by .= ', ' . $qpart->get_alias() . ' DESC';
+						break;
+					}
+				}
+			} 
 		}
 		
 		// SELECT
