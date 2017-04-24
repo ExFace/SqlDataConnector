@@ -101,12 +101,16 @@ class MsSQL extends AbstractSqlConnector {
 		return $array;
 	}  
 	
-	public function transaction_start(){
+	public function transaction_start(){		
 		// Do nothing if the autocommit option is set for this connection
 		if ($this->get_autocommit()){
 			return $this;
 		}
 		
+		// Make sure, the connection is established
+		if (!$this->is_connected()){
+			$this->connect();
+		}
 		if (!sqlsrv_begin_transaction($this->get_current_connection())){
 			throw new DataConnectionTransactionStartError($this, 'Cannot start transaction in "' . $this->get_alias_with_namespace() . '": ' . $this->get_last_error(), '6T2T2JM');
 		} else {

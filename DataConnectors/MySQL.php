@@ -134,6 +134,11 @@ class MySQL extends AbstractSqlConnector {
 	
 	public function transaction_start(){
 		if (!$this->transaction_is_started()){
+			// Make sure, the connection is established
+			if (!$this->is_connected()){
+				$this->connect();
+			}
+			
 			try {
 				mysqli_begin_transaction ($this->get_current_connection());
 				$this->set_transaction_started(true);

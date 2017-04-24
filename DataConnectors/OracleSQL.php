@@ -125,6 +125,10 @@ class OracleSQL extends AbstractSqlConnector {
 	 * @see \exface\Core\CommonLogic\AbstractDataConnector::transaction_start()
 	 */
 	public function transaction_start(){
+		// Make sure, the connection is established
+		if (!$this->is_connected()){
+			$this->connect();
+		}
 		$this->set_transaction_started(true);
 		return $this;
 	}
