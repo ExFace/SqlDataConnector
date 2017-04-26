@@ -61,7 +61,13 @@ class OracleSQL extends AbstractSqlConnector {
 			$sql .= ' returning ' . $this->insert_id_field_name . ' into :id';
 		}
 		
-		if (!$result = oci_parse($this->get_current_connection(), $sql)) {
+		try {
+			$result = oci_parse($this->get_current_connection(), $sql);
+		} catch (\Throwable $e){
+			throw new DataQueryFailedError($query, "Pasrsing of a query to the database failed!");
+		}
+		
+		if (!$result) {
 			throw new DataQueryFailedError($query, "Pasrsing of a query to the database failed!");
 		} else {
 			$this->last_statement = $result;
@@ -71,10 +77,14 @@ class OracleSQL extends AbstractSqlConnector {
 				OCIBindByName($result,":ID",$id,32);
 			}
 			
-			if ($this->get_autocommit()){
-				$ex = @oci_execute($result);
-			} else {
-				$ex = @oci_execute($result, OCI_NO_AUTO_COMMIT);
+			try {
+				if ($this->get_autocommit()){
+					$ex = @oci_execute($result);
+				} else {
+					$ex = @oci_execute($result, OCI_NO_AUTO_COMMIT);
+				}
+			} catch (\Throwable $e){
+				throw new DataQueryFailedError($query, "SQL query failed! " . $this->get_last_error());
 			}
 			
 			if (!$ex) {

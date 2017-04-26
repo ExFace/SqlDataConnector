@@ -854,9 +854,9 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			case EXF_COMPARATOR_LESS_THAN:
 			case EXF_COMPARATOR_GREATER_THAN_OR_EQUALS:
 			case EXF_COMPARATOR_LESS_THAN_OR_EQUALS: $output = $subject . " " . $comparator . " " . $this->prepare_where_value($value, $data_type, $sql_data_type); break;
-			case EXF_COMPARATOR_IS_NOT: $output = 'UPPER(' . $subject . ") NOT LIKE '%" . strtoupper($value) . "%'";
+			case EXF_COMPARATOR_IS_NOT: $output = 'UPPER(' . $subject . ") NOT LIKE '%" . $this->prepare_where_value(strtoupper($value), $data_type) . "%'";
 			case EXF_COMPARATOR_IS:
-			default: $output = 'UPPER(' . $subject . ") LIKE '%" . strtoupper($value) . "%'";
+			default: $output = 'UPPER(' . $subject . ") LIKE '%" . $this->prepare_where_value(strtoupper($value), $data_type) . "%'";
 		}
 		return $output;
 	}
@@ -866,7 +866,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		if ($data_type->is(EXF_DATA_TYPE_BOOLEAN)){
 			$output = $value ? 1 : 0;
 		} else {
-			$output = $value;
+			$output = $this->escape_string($value);
 		}
 		return $output;
 	}
