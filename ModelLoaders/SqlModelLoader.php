@@ -82,7 +82,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 			}
 			
 			// Overwrite inherited properties
-			if (!$object->get_data_address()){
+			if (is_null($object->get_data_address()) || $object->get_data_address() == '' || (!is_null($row['data_address']) && !$row['data_address'] == '')){
 				$object->set_data_address($row['data_address']);
 			}
 			if (!$object->get_short_description()){
