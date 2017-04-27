@@ -433,7 +433,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 				}
 				$app = $action_list->get_workbench()->get_app($row['app_alias']);
 				$object = $action_list instanceof ObjectActionList ? $action_list->get_meta_object() : $action_list->get_workbench()->model()->get_object_by_id($row['object_oid']);
-				$a = ActionFactory::create_from_model($row['action'], $row['alias'], $app, $object, $action_uxon);
+				$a = ActionFactory::create_from_model($row['action'], $row['alias'], $app, $object, $action_uxon, $called_by_widget);
 				$a->set_name($row['name']);
 				$action_list->add($a);
 				
