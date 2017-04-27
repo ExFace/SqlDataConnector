@@ -301,6 +301,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 			
 			$sql = '
 				SELECT 
+					ds.custom_query_builder,
 					ds.default_query_builder, 
 					ds.read_only_flag AS data_source_read_only, 
 					dc.read_only_flag AS connection_read_only, 
@@ -336,7 +337,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 		
 		// The query builder: if not given, use the default one from the data source configuration
 		if (!$data_source->get_query_builder_alias()){
-			$data_source->set_query_builder_alias($ds['default_query_builder']);
+			$data_source->set_query_builder_alias($ds['custom_query_builder'] ? $ds['custom_query_builder'] : $ds['default_query_builder']);
 		}
 		
 		// The configuration of the connection: if not given, get the configuration from DB
