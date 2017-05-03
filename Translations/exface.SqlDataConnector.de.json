@@ -1,4 +1,4 @@
 {
 	"SCHEMA_INSTALLER.SUCCESS": "%counter% SQL-Schema-Update wurde installiert|%counter% SQL-Schema-Updates wurden installiert",
-	"SCHEMA_INSTALLER.FAILED": "SQL-Schema-Update Nr. %first_failed_id% fehlerhaft: %first_failed_text%|%counter% SQL-Schema-Updates wurden abgebrochen angefangen mit Update Nr. %first_failed_id%: %first_failed_text%"
+	"SCHEMA_INSTALLER.FAILED": "SQL-Schema-Update Nr. %first_failed_id% fehlerhaft: %error_text%|%counter% SQL-Schema-Updates wurden abgebrochen angefangen mit Update Nr. %first_failed_id%: %error_text%"
 }

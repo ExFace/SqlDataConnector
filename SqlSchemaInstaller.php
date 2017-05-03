@@ -147,10 +147,10 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 					continue;
 				}
 				$sql = file_get_contents($updates_folder . DIRECTORY_SEPARATOR . $file);
-				$sql = trim(preg_replace('/\s+/', ' ', $sql));
+				//$sql = trim(preg_replace('/\s+/', ' ', $sql));
 				try {
 					$this->get_data_connection()->transaction_start();
-					foreach (explode(';', $sql) as $statement){
+					foreach (preg_split("/;\R/", $sql) as $statement){
 						if ($statement){
 							$this->get_data_connection()->run_sql($statement);
 						}
@@ -173,7 +173,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller {
 			$result = $this->get_sql_connector_app()->get_translator()->translate('SCHEMA_INSTALLER.SUCCESS', array('%counter%' => $installed_counter), $installed_counter);
 		}
 		if ($failed_counter = count($updates_failed)){
-			$result_failed = $this->get_sql_connector_app()->get_translator()->translate('SCHEMA_INSTALLER.FAILED', array('%counter%' => $failed_counter, '%first_failed_id%' => reset($updates_failed), '%first_failed_text%' => $error_text), $failed_counter);
+			$result_failed = $this->get_sql_connector_app()->get_translator()->translate('SCHEMA_INSTALLER.FAILED', array('%counter%' => $failed_counter, '%first_failed_id%' => reset($updates_failed), '%error_text%' => $error_text), $failed_counter);
 		}
 		
 		if ($result && $result_failed){
