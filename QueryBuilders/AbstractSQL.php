@@ -11,6 +11,8 @@ use exface\Core\CommonLogic\Model\RelationPath;
 use exface\Core\Exceptions\DataTypeValidationError;
 use exface\Core\DataTypes\NumberDataType;
 use exface\SqlDataConnector\DataConnectors\AbstractSqlConnector;
+use exface\SqlDataConnector\SqlDataQuery;
+use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 
 /**
  * A query builder for oracle SQL.
@@ -53,6 +55,9 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		if (!$data_connection) $data_connection = $this->get_main_object()->get_data_connection();	
 		
 		$query = $this->build_sql_query_select();
+		$q = new SqlDataQuery();
+		$q->set_sql($query);
+		//throw new DataQueryFailedError($q, 'xx');
 		// first do the main query
 		if ($rows = $data_connection->run_sql($query)->get_result_array()){
 			foreach ($this->get_binary_columns() as $full_alias){
@@ -823,20 +828,24 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		try {
 			// Pay attention to comparators expecting concatennated values (like IN) - the concatennated value will not validate against
 			// the data type, but the separated parts should
-			if ($comparator != EXF_COMPARATOR_IN){
+			if ($comparator != EXF_COMPARATOR_IN && $comparator != EXF_COMPARATOR_NOT_IN){
 				$value = $data_type::parse($value);
 			} else {
-				$values = explode(EXF_LIST_SEPARATOR, trim($value, EXF_LIST_SEPARATOR));
+				$values = explode(EXF_LIST_SEPARATOR, $value);
+				$value = '';
+				//$values = explode(EXF_LIST_SEPARATOR, trim($value, EXF_LIST_SEPARATOR));
 				foreach ($values as $nr => $val){
-					// Ignore empty strings, which can result from malformed values like "1,2,,4".
+					// If there is an empty string among the values, this means that the value may be empty (NULL). NULL is not a valid
+					// value for an IN-statement, though, so we need to append an "OR IS NULL" here.
 					if ($val === '') {
 						unset($values[$nr]);
+						$value = $subject . ($comparator == EXF_COMPARATOR_IN ? ' IS NULL' : ' IS NOT NULL');
 						continue;
 					}
 					// Normalize non-empty values
 					$values[$nr] = $data_type::parse($val);
 				}
-				$value = implode(',', $values);
+				$value = '(' . implode(',', $values) . ')' . ($value ? ' OR ' . $value : '');
 			}
 		} catch (DataTypeValidationError $e) {
 			// TODO Not sure, if it is wise to skip invalid filters. Perhaps we should rethrow the exception here. This would, howerver
@@ -847,7 +856,8 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		
 		// If everything is OK, build the SQL
 		switch ($comparator){
-			case EXF_COMPARATOR_IN: $output = $subject . " IN (" . $value . ")"; break;
+			case EXF_COMPARATOR_IN: $output = "(" . $subject . " IN " . $value . ")"; break; // The braces are needed if there is a OR IS NULL addition (see above)
+			case EXF_COMPARATOR_NOT_IN: $output = "(" . $subject . " NOT IN " . $value . ")"; break; // The braces are needed if there is a OR IS NULL addition (see above)
 			case EXF_COMPARATOR_EQUALS: $output = $subject . " = " . $this->prepare_where_value($value, $data_type, $sql_data_type); break;
 			case EXF_COMPARATOR_EQUALS_NOT: $output = $subject . " != " . $this->prepare_where_value($value, $data_type, $sql_data_type); break;
 			case EXF_COMPARATOR_GREATER_THAN:
