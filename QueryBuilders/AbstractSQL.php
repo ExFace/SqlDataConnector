@@ -24,7 +24,9 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	// CONFIG
 	protected $short_alias_max_length = 30; // maximum length of SELECT AS aliases
 	protected $short_alias_remove_chars = array('.', '>', '<', '-', '(', ')', ':'); // forbidden chars in SELECT AS aliases
+	protected $short_alias_replacer = '_';
 	protected $short_alias_forbidden = array('SIZE', 'SELECT', 'FROM', 'AS', 'PARENT', 'ID', 'LEVEL', 'ORDER', 'GROUP'); // forbidden SELECT AS aliases
+	protected $short_alias_prefix = 'S';
 	
 	// other vars
 	protected $select_distinct = false;
@@ -488,7 +490,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			}
 			// otherwise select from the main table
 			if (!$select_from){
-				$select_from = $this->main_object->get_alias();
+				$select_from = $this->get_main_object()->get_alias();
 			}
 			$select_from .= $this->get_query_id();
 		}
@@ -988,8 +990,8 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	 * Every SQL-alias (like "SELECT xxx AS alias" or "SELECT * FROM table1 alias") should be shortened
 	 * because most SQL dialects only allow a limited number of characters in an alias (this number should
 	 * be set in $short_alias_max_length).
-	 * @param unknown $full_alias
-	 * @return Ambigous <string, unknown, multitype:>
+	 * @param string $full_alias
+	 * @return string
 	 */
 	protected function get_short_alias($full_alias){
 		if (isset($this->short_aliases[$full_alias])){
@@ -1000,7 +1002,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			$short_alias = $full_alias;
 		} else {
 			$this->short_alias_index++;
-			$short_alias = substr($this->get_clean_alias($full_alias), 0, ($this->short_alias_max_length - strlen($this->short_alias_index))) . $this->short_alias_index;
+			$short_alias = $this->short_alias_prefix . str_pad($this->short_alias_index, 3, '0', STR_PAD_LEFT) . $this->short_alias_replacer . substr($this->get_clean_alias($full_alias), -1*($this->short_alias_max_length - 3 - 1 - 1));
 			$this->short_aliases[$full_alias] = $short_alias;
 		}
 		
