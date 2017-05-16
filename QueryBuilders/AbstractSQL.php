@@ -13,6 +13,7 @@ use exface\Core\DataTypes\NumberDataType;
 use exface\SqlDataConnector\DataConnectors\AbstractSqlConnector;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
+use exface\Core\CommonLogic\QueryBuilder\QueryPartSelect;
 
 /**
  * A query builder for oracle SQL.
@@ -904,10 +905,9 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		}
 		
 		if ($start_rel){
-			/** @var string part of the relation part up to the first reverse relation */
-			$prefix_rel_path = RelationPath::relaton_path_cut($qpart->get_alias(), null, $start_rel->get_alias());
-			/** @var string complete path of the first reverse relation */
-			$start_rel_path = RelationPath::relation_path_add($prefix_rel_path, $start_rel->get_alias());
+			$qpart_rel_path = $qpart->get_attribute()->get_relation_path();
+			/** @var RelationPath $prefix_rel_path part of the relation part up to the first reverse relation */
+			$prefix_rel_path = $qpart_rel_path->get_subpath(0, $qpart_rel_path->get_index_of($start_rel));
 		
 			// build a subquery
 			/* @var $relq \exface\SqlDataConnector\QueryBuilders\AbstractSQL */
@@ -916,14 +916,15 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			$relq->set_main_object($start_rel->get_related_object());
 			$relq->set_query_id($this->get_next_subquery_id());
 			if ($start_rel->get_type() == '1n'){
-				// If we are dealing with a reverse relation, build a subquery to select foreign keys from rows of the joined tables, tha match the given filter
-				$rel_filter = RelationPath::relaton_path_cut($qpart->get_attribute()->get_alias_with_relation_path(), $start_rel->get_alias());
+				// If we are dealing with a reverse relation, build a subquery to select foreign keys from rows of the joined tables, 
+				// that match the given filter
+				$rel_filter = $qpart->get_attribute()->rebase($qpart_rel_path->get_subpath($qpart_rel_path->get_index_of($start_rel)+1))->get_alias_with_relation_path();
 				$relq->add_attribute($start_rel->get_foreign_key_alias());
 				// Add the filter relative to the first reverse relation with the same $value and $comparator
 				$relq->add_filter_from_string($rel_filter, $qpart->get_compare_value() , $qpart->get_comparator());
 				// FIXME add support for related_object_special_key_alias
-				if ($prefix_rel_path){
-					$prefix_rel_qpart = new \exface\Core\CommonLogic\QueryBuilder\QueryPartSelect(RelationPath::relation_path_add($prefix_rel_path, $this->get_main_object()->get_related_object($prefix_rel_path)->get_uid_alias()), $this);
+				if (!$prefix_rel_path->is_empty()){
+					$prefix_rel_qpart = new QueryPartSelect(RelationPath::relation_path_add($prefix_rel_path->to_string(), $this->get_main_object()->get_related_object($prefix_rel_path->to_string())->get_uid_alias()), $this);
 					$junction = $this->build_sql_select($prefix_rel_qpart, null, null, '');
 				} else {
 					$junction = $this->get_short_alias($this->get_main_object()->get_alias() . $this->get_query_id()) . '.' . $this->get_main_object()->get_uid_attribute()->get_data_address();
