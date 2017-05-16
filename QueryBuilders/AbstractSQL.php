@@ -485,7 +485,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 				if ($rev_rel = $qpart->get_first_relation('1n')){
 					// In case of reverse relations, $select_from is used to connect the subselects.
 					// Here we use the table of the last regular relation relation before the reversed one.
-					$select_from = RelationPath::relaton_path_cut($select_from, null, $rev_rel->get_alias());
+					$select_from = $attribute->get_relation_path()->get_subpath(0, $attribute->get_relation_path()->get_index_of($rev_rel))->to_string();
 				}
 			}
 			// otherwise select from the main table
@@ -565,16 +565,17 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		/* if there is at least one reverse relation, we need to build a subselect. This is a bit tricky since
 		 * "normal" and reverse relations can be mixed in the chain of relations for a certain attribute. Imagine,
 		* we would like to see the customer card number and type in a list of orders. Assuming the customer may
-		* have multiple cards we get the following: ORDER->CUSTOMER<->CUSTOMER_CARD->TYPE->LABEL. Thus we need to
+		* have multiple cards we get the following: ORDER->CUSTOMER<-CUSTOMER_CARD->TYPE->LABEL. Thus we need to
 		* join ORDER and CUSTOMER in the main query and create a subselect for CUSTOMER_CARD joined with TYPE.
 		* The subselect needs to be filtered by ORDER.CUSTOMER_ID which is the foriegn key of CUSTOMER. We will
 		* reference this example in the comments below.
 		*/
-		/** @var string part of the relation part up to the first reverse relation */
-		$reg_rel_path = RelationPath::relaton_path_cut($qpart->get_alias(), null, $rev_rel->get_alias());
-		/** @var string complete path of the first reverse relation */
-		$rev_rel_path = RelationPath::relation_path_add($reg_rel_path, $rev_rel->get_alias());
-	
+		$rel_path = $qpart->get_attribute()->get_relation_path();
+		/** @var RelationPath $reg_rel_path part of the relation part up to the first reverse relation */
+		$reg_rel_path = $rel_path->get_subpath(0, $rel_path->get_index_of($rev_rel));
+		/** @var RelationPath complete path of the first reverse relation */
+		$rev_rel_path = $reg_rel_path->copy()->append_relation($rev_rel);
+		
 		// build a subquery
 		/* @var $relq \exface\SqlDataConnector\QueryBuilders\AbstractSQL */
 		$qb_class = get_class($this);
@@ -585,20 +586,20 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		$relq->set_query_id($this->get_next_subquery_id());
 	
 		// Add the key alias relative to the first reverse relation (TYPE->LABEL for the above example)
-		$relq->add_attribute(RelationPath::relaton_path_cut($qpart->get_alias(), $rev_rel->get_alias()));
+		$relq->add_attribute(str_replace($rev_rel_path->to_string() . RelationPath::RELATION_SEPARATOR, '', $qpart->get_alias()));
 	
 		// Set the filters of the subquery to all filters of the main query, that need to be applied to objects beyond the reverse relation. 
 		// In our examplte, those would be any filter on ORDER->CUSTOMER<-CUSTOMER_CARD or ORDER->CUSTOMER<-CUSTOMER_CARD->TYPE, etc. Filters
 		// over ORDER oder ORDER->CUSTOMER would be applied to the base query and ar not neeede in the subquery any more.
 		// If we rebase and add all filters, it will still work, but the SQL would get much more complex and surely slow with large data sets.
 		// Set $remove_conditions_not_matching_the_path parameter to true, to make sure, only applicable filters will get rebased.
-		$relq->set_filters_condition_group($this->get_filters()->get_condition_group()->rebase($rev_rel_path, true));
+		$relq->set_filters_condition_group($this->get_filters()->get_condition_group()->rebase($rev_rel_path->to_string(), true));
 		// Add a new filter to attach to the main query (WHERE CUSTOMER_CARD.CUSTOMER_ID = ORDER.CUSTOMER_ID for the above example)
 		// This only makes sense, if we have a reference to the parent query (= the $select_from parameter is set)
 		if ($select_from){
-			if ($reg_rel_path){ 
+			if (!$reg_rel_path->is_empty()){ 
 				// attach to the related object key of the last regular relation before the reverse one
-				$junction_attribute = $this->get_main_object()->get_attribute(RelationPath::relation_path_add($reg_rel_path, $this->get_main_object()->get_relation($reg_rel_path)->get_related_object_key_alias()));
+				$junction_attribute = $this->get_main_object()->get_attribute(RelationPath::relation_path_add($reg_rel_path->to_string(), $this->get_main_object()->get_relation($reg_rel_path->to_string())->get_related_object_key_alias()));
 				$junction = $junction_attribute->get_data_address();
 			} else { // attach to the uid of the core query if there are no regular relations preceeding the reversed one
 				$junction = $this->get_main_object()->get_uid_attribute()->get_data_address();
