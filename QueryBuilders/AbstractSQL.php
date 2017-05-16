@@ -14,6 +14,7 @@ use exface\SqlDataConnector\DataConnectors\AbstractSqlConnector;
 use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 use exface\Core\CommonLogic\QueryBuilder\QueryPartSelect;
+use exface\Core\CommonLogic\Model\Relation;
 
 /**
  * A query builder for oracle SQL.
@@ -483,7 +484,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		if (!$select_from) {
 			// if it's a relation, we need to select from a joined table except for reverse relations
 			if ($select_from = $attribute->get_relation_path()->to_string()){
-				if ($rev_rel = $qpart->get_first_relation('1n')){
+				if ($rev_rel = $qpart->get_first_relation(Relation::RELATION_TYPE_REVERSE)){
 					// In case of reverse relations, $select_from is used to connect the subselects.
 					// Here we use the table of the last regular relation relation before the reversed one.
 					$select_from = $attribute->get_relation_path()->get_subpath(0, $attribute->get_relation_path()->get_index_of($rev_rel))->to_string();
@@ -501,7 +502,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		$group_function = !is_null($group_function) ? $group_function : $qpart->get_aggregate_function();
 	
 		// build subselects for reverse relations if the body of the select is not specified explicitly
-		if (!$select_column && $qpart->get_used_relations('1n')){
+		if (!$select_column && $qpart->get_used_relations(Relation::RELATION_TYPE_REVERSE)){
 			$output = $this->build_sql_select_subselect($qpart, $select_from);
 			$add_nvl = true;
 		}
@@ -560,7 +561,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	 * @return string
 	 */
 	protected function build_sql_select_subselect(\exface\Core\CommonLogic\QueryBuilder\QueryPart $qpart, $select_from = null){
-		$rev_rel = $qpart->get_first_relation('1n');
+		$rev_rel = $qpart->get_first_relation(Relation::RELATION_TYPE_REVERSE);
 		if (!$rev_rel) return '';
 		
 		/* if there is at least one reverse relation, we need to build a subselect. This is a bit tricky since
@@ -707,7 +708,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 				$left_table_alias = $this->get_short_alias($left_table_alias ? $left_table_alias : $this->get_main_object()->get_alias()) . $this->get_query_id();
 				$left_obj = $this->get_main_object();
 				foreach ($rels as $alias => $rel){
-					if ($rel->get_type() == 'n1'){
+					if ($rel->is_forward_relation()){
 						$right_table_alias = $this->get_short_alias($alias) . $this->get_query_id();
 						$right_obj = $this->get_main_object()->get_related_object($alias);
 						// generate the join sql
@@ -805,7 +806,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			return false;
 		}
 		
-		if ($qpart->get_first_relation('1n') || ($rely_on_joins == false && count($qpart->get_used_relations()) > 0)){
+		if ($qpart->get_first_relation(Relation::RELATION_TYPE_REVERSE) || ($rely_on_joins == false && count($qpart->get_used_relations()) > 0)){
 			// Use subqueries for attributes with reverse relations and in case we know, tha main query will not have any joins (e.g. UPDATE queries)
 			$output = $this->build_sql_where_subquery($qpart, $rely_on_joins);
 		} else {
@@ -898,7 +899,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		// This is implicitly also the case, if there are no joins needed (= the data in the main query will be sufficient in any case)
 		if($rely_on_joins || count($qpart->get_used_relations()) === 0){
 			// If so, just need to include those relations in the subquery, which follow a reverse relation
-			$start_rel = $qpart->get_first_relation('1n');
+			$start_rel = $qpart->get_first_relation(Relation::RELATION_TYPE_REVERSE);
 		} else {
 			// Otherwise, all relations (starting from the first one) must be put into the subquery, because there are no joins in the main one
 			$start_rel = $qpart->get_first_relation();
@@ -915,7 +916,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 			$relq = new $qb_class;
 			$relq->set_main_object($start_rel->get_related_object());
 			$relq->set_query_id($this->get_next_subquery_id());
-			if ($start_rel->get_type() == '1n'){
+			if ($start_rel->is_reverse_relation()){
 				// If we are dealing with a reverse relation, build a subquery to select foreign keys from rows of the joined tables, 
 				// that match the given filter
 				$rel_filter = $qpart->get_attribute()->rebase($qpart_rel_path->get_subpath($qpart_rel_path->get_index_of($start_rel)+1))->get_alias_with_relation_path();
@@ -1057,7 +1058,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 	protected function get_attributes_with_reverse_relations(){
 		$result = array();
 		foreach ($this->get_attributes() as $alias => $qpart){
-			if ($qpart->get_used_relations('1n')){
+			if ($qpart->get_used_relations(Relation::RELATION_TYPE_REVERSE)){
 				$result[$alias] = $qpart;
 			}
 		}

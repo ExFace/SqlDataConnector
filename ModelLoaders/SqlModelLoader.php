@@ -194,7 +194,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 								$row['attribute_alias'], // foreign key in the main object
 								$row['object_oid'], // related object
 								null, // related object key attribute (uid)
-								'1n'); // relation type
+								Relation::RELATION_TYPE_REVERSE); // relation type
 					} elseif ($attr) {
 						// At this point, we know, it is a direct relation. This can only happen if the object has a corresponding direct
 						// attribute. This is why the elseif($attr) is there.
@@ -207,7 +207,7 @@ class SqlModelLoader implements ModelLoaderInterface {
 								$attr->get_alias(),
 								$row['related_object_oid'],
 								$row['related_object_special_key_attribute_oid'],
-								'n1');
+								Relation::RELATION_TYPE_FORWARD);
 					}
 						
 					if ($rel){

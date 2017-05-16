@@ -3,6 +3,7 @@
 use exface\Core\DataTypes\AbstractDataType;
 use exface\Core\CommonLogic\AbstractDataConnector;
 use exface\Core\Exceptions\QueryBuilderException;
+use exface\Core\CommonLogic\Model\Relation;
 /**
  * A query builder for Oracle SQL.
  * 
@@ -109,7 +110,7 @@ class OracleSQL extends AbstractSQL {
 					}
 					// Also skip selects with reverse relations, as they will be fetched via subselects later
 					// Selecting them in the core query would only slow it down. The filtering ist done explicitly in build_sql_where_condition()
-					elseif ($qpart->get_used_relations('1n')){
+					elseif ($qpart->get_used_relations(Relation::RELATION_TYPE_REVERSE)){
 						continue;
 					} 
 					// Add all remainig attributes of the core objects to the core query and select them 1-to-1 in the enrichment query
@@ -142,7 +143,7 @@ class OracleSQL extends AbstractSQL {
 				}
 				// Check if we need some UIDs from the core tables to join the enrichments afterwards
 				if ($first_rel = $qpart->get_first_relation()){
-					if ($first_rel->get_type() == 'n1') {
+					if ($first_rel->is_forward_relation()) {
 						$first_rel_qpart = $this->add_attribute($first_rel->get_alias());
 						// IDEA this does not support relations based on custom sql. Perhaps this needs to change
 						$core_selects[$first_rel_qpart->get_attribute()->get_data_address()] = $this->build_sql_select($first_rel_qpart, null, null, $first_rel_qpart->get_attribute()->get_data_address(), ($group_by ? 'MAX' : null));
@@ -150,7 +151,7 @@ class OracleSQL extends AbstractSQL {
 				}
 				
 				// build the enrichment select. 
-				if ($qpart->get_first_relation() && $qpart->get_first_relation()->get_type() == '1n'){
+				if ($qpart->get_first_relation() && $qpart->get_first_relation()->is_reverse_relation()){
 					// If the first relation needed for the select is a reverse one, make sure, the subselect will reference the core query directly
 					$enrichment_select .= ', ' . $this->build_sql_select($qpart, 'EXFCOREQ');
 				} elseif ($group_by && !$qpart->get_first_relation() && !$qpart->get_aggregate_function()){ 
