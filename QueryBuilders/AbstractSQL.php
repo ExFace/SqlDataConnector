@@ -795,6 +795,10 @@ abstract class AbstractSQL extends AbstractQueryBuilder{
 		elseif ($attr->get_data_type()->is(EXF_DATA_TYPE_BOOLEAN) && $comp == EXF_COMPARATOR_IS) {
 			$comp = EXF_COMPARATOR_EQUALS;
 		}
+		// also use equals for the NUMBER data type, but make sure, the value to compare to is really a number (otherwise the query will fail!)
+		elseif ($attr->get_data_type()->is(EXF_DATA_TYPE_DATE) && $comp == EXF_COMPARATOR_IS) {
+			$comp = EXF_COMPARATOR_EQUALS;
+		}
 
 		$select = $attr->get_data_address();
 		$where = $qpart->get_data_address_property('WHERE');
