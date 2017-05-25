@@ -17,236 +17,286 @@ use exface\Core\Factories\ConfigurationFactory;
  * app's config, so the next time the installer runs, only new updates will get executed.
  *
  * @author Andrej Kabachnik
- *
+ *        
  */
-class SqlSchemaInstaller extends AbstractAppInstaller {
+class SqlSchemaInstaller extends AbstractAppInstaller
+{
 
-	private $sql_folder_name = 'sql';
-	private $sql_updates_folder_name = 'updates';
-	private $sql_install_folder_name = 'install';
-	private $sql_uninstall_folder_name = 'uninstall';
-	private $data_connection = null;
+    private $sql_folder_name = 'sql';
 
-	/**
-	 *
-	 * {@inheritDoc}
-	 * @see \exface\Core\CommonLogic\AbstractApp::install()
-	 */
-	public function install($source_absolute_path){
-		return $this->update($source_absolute_path);
-	}
+    private $sql_updates_folder_name = 'updates';
 
-	/**
-	 *
-	 * {@inheritDoc}
-	 * @see \exface\Core\Interfaces\InstallerInterface::update()
-	 */
-	public function update($source_absolute_path){
-		return $this->perform_model_source_update($source_absolute_path);
-	}
+    private $sql_install_folder_name = 'install';
 
-	/**
-	 *
-	 * {@inheritDoc}
-	 * @see \exface\Core\Interfaces\InstallerInterface::uninstall()
-	 */
-	public function uninstall(){
-		return 'Automatic uninstaller not implemented for' . $this->get_name_resolver()->get_alias_with_namespace() . '!';
-	}
+    private $sql_uninstall_folder_name = 'uninstall';
 
-	/**
-	 *
-	 * {@inheritDoc}
-	 * @see \exface\Core\Interfaces\InstallerInterface::backup()
-	 */
-	public function backup($destination_absolute_path){
-		return 'SQL Backup not implemented for ' . $this->get_name_resolver()->get_alias_with_namespace() . '!';
-	}
+    private $data_connection = null;
 
-	/**
-	 * @return string
-	 */
-	public function get_sql_folder_name() {
-		return $this->sql_folder_name;
-	}
+    /**
+     *
+     * {@inheritdoc}
+     *
+     * @see \exface\Core\CommonLogic\AbstractApp::install()
+     */
+    public function install($source_absolute_path)
+    {
+        return $this->update($source_absolute_path);
+    }
 
-	/**
-	 * @param $value
-	 * @return $this
-	 */
-	public function set_sql_folder_name($value) {
-		$this->sql_folder_name = $value;
-		return $this;
-	}
+    /**
+     *
+     * {@inheritdoc}
+     *
+     * @see \exface\Core\Interfaces\InstallerInterface::update()
+     */
+    public function update($source_absolute_path)
+    {
+        return $this->performModelSourceUpdate($source_absolute_path);
+    }
 
-	/**
-	 * Default: %app_folder%/Install/sql
-	 *
-	 * @return string
-	 */
-	public function get_sql_folder_absolute_path($source_absolute_path){
-		return $this->get_install_folder_absolute_path($source_absolute_path) . DIRECTORY_SEPARATOR . $this->get_sql_folder_name();
-	}
+    /**
+     *
+     * {@inheritdoc}
+     *
+     * @see \exface\Core\Interfaces\InstallerInterface::uninstall()
+     */
+    public function uninstall()
+    {
+        return 'Automatic uninstaller not implemented for' . $this->getNameResolver()->getAliasWithNamespace() . '!';
+    }
 
-	/**
-	 * @return string
-	 */
-	public function get_sql_install_folder_name() {
-		return $this->sql_install_folder_name;
-	}
+    /**
+     *
+     * {@inheritdoc}
+     *
+     * @see \exface\Core\Interfaces\InstallerInterface::backup()
+     */
+    public function backup($destination_absolute_path)
+    {
+        return 'SQL Backup not implemented for ' . $this->getNameResolver()->getAliasWithNamespace() . '!';
+    }
 
-	/**
-	 * @param $value
-	 * @return $this
-	 */
-	public function set_sql_install_folder_name($value) {
-		$this->sql_install_folder_name = $value;
-		return $this;
-	}
+    /**
+     *
+     * @return string
+     */
+    public function getSqlFolderName()
+    {
+        return $this->sql_folder_name;
+    }
 
-	/**
-	 * @return string
-	 */
-	public function get_sql_updates_folder_name() {
-		return $this->sql_updates_folder_name;
-	}
+    /**
+     *
+     * @param
+     *            $value
+     * @return $this
+     */
+    public function setSqlFolderName($value)
+    {
+        $this->sql_folder_name = $value;
+        return $this;
+    }
 
-	/**
-	 * @param $value
-	 * @return $this
-	 */
-	public function set_sql_updates_folder_name($value) {
-		$this->sql_updates_folder_name = $value;
-		return $this;
-	}
+    /**
+     * Default: %app_folder%/Install/sql
+     *
+     * @return string
+     */
+    public function getSqlFolderAbsolutePath($source_absolute_path)
+    {
+        return $this->getInstallFolderAbsolutePath($source_absolute_path) . DIRECTORY_SEPARATOR . $this->getSqlFolderName();
+    }
 
-	/**
-	 * @return string
-	 */
-	public function get_sql_uninstall_folder_name() {
-		return $this->sql_uninstall_folder_name;
-	}
+    /**
+     *
+     * @return string
+     */
+    public function getSqlInstallFolderName()
+    {
+        return $this->sql_install_folder_name;
+    }
 
-	/**
-	 * @param $value
-	 * @return $this
-	 */
-	public function set_sql_uninstall_folder_name($value) {
-		$this->sql_uninstall_folder_name = $value;
-		return $this;
-	}
+    /**
+     *
+     * @param
+     *            $value
+     * @return $this
+     */
+    public function setSqlInstallFolderName($value)
+    {
+        $this->sql_install_folder_name = $value;
+        return $this;
+    }
 
-	/**
-	 * @return SqlDataConnectorInterface
-	 */
-	public function get_data_connection() {
-		return $this->data_connection;
-	}
+    /**
+     *
+     * @return string
+     */
+    public function getSqlUpdatesFolderName()
+    {
+        return $this->sql_updates_folder_name;
+    }
 
-	/**
-	 * @param SqlDataConnectorInterface $value
-	 * @return $this
-	 */
-	public function set_data_connection(SqlDataConnectorInterface $value) {
-		$this->data_connection = $value;
-		return $this;
-	}
+    /**
+     *
+     * @param
+     *            $value
+     * @return $this
+     */
+    public function setSqlUpdatesFolderName($value)
+    {
+        $this->sql_updates_folder_name = $value;
+        return $this;
+    }
 
-	/**
-	 * Iterates through the files in "%source_absolute_path%/%install_folder_name%/%sql_folder_name%/%sql_updates_folder_name%" (by default
-	 * "%source_absolute_path%/Install/sql/updates") attempting to execute the SQL scripts stored in those files. If anything goes wrong,
-	 * all subsequent files are not executed and the last successfull update is marked as performed. Thus, once the update is triggered
-	 * again, it will try to perform all the updates starting from the failed one.
-	 *
-	 * In order to explicitly skip one or more update files, increase the option LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID in the local config
-	 * file of the app being installed to match the last update number that should not be installed.
-	 *
-	 * @param string $source_absolute_path
-	 * @return string
-	 */
-	protected function perform_model_source_update($source_absolute_path){
+    /**
+     *
+     * @return string
+     */
+    public function getSqlUninstallFolderName()
+    {
+        return $this->sql_uninstall_folder_name;
+    }
 
-		$updates_folder = $this->get_sql_folder_absolute_path($source_absolute_path) . DIRECTORY_SEPARATOR . $this->get_sql_updates_folder_name();
-		$id_installed = $this->get_app()->get_config()->get_option('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID');
+    /**
+     *
+     * @param
+     *            $value
+     * @return $this
+     */
+    public function setSqlUninstallFolderName($value)
+    {
+        $this->sql_uninstall_folder_name = $value;
+        return $this;
+    }
 
-		$updates_installed = array();
-		$updates_failed = array();
-		$error_text = '';
+    /**
+     *
+     * @return SqlDataConnectorInterface
+     */
+    public function getDataConnection()
+    {
+        return $this->data_connection;
+    }
 
-		$updateFolderDirScan = array_diff(scandir($updates_folder, SCANDIR_SORT_ASCENDING), array('..', '.'));
-		foreach ($updateFolderDirScan as $file){
-			$id = intval(substr($file, 0, 4));
-			if ($id > $id_installed){
-				if (count($updates_failed) > 0){
-					$updates_failed[] = $id;
-					continue;
-				}
-				$sql = file_get_contents($updates_folder . DIRECTORY_SEPARATOR . $file);
-				//$sql = trim(preg_replace('/\s+/', ' ', $sql));
-				try {
-					$this->get_data_connection()->transaction_start();
-					foreach (preg_split("/;\R/", $sql) as $statement){
-						if ($statement){
-							$this->get_data_connection()->run_sql($statement);
-						}
-					}
-					$this->get_data_connection()->transaction_commit();
-					$updates_installed[] = $id;
-				} catch (\Throwable $e){
-					$updates_failed[] = $id;
-					$error_text = $e->getMessage();
-				}
-			}
+    /**
+     *
+     * @param SqlDataConnectorInterface $value            
+     * @return $this
+     */
+    public function setDataConnection(SqlDataConnectorInterface $value)
+    {
+        $this->data_connection = $value;
+        return $this;
+    }
 
-		}
-		// Save the last id in order to skip installed ones next time
-		if (count($updates_installed) > 0){
-			$this->set_last_model_source_update_id(end($updates_installed));
-		}
+    /**
+     * Iterates through the files in "%source_absolute_path%/%install_folder_name%/%sql_folder_name%/%sql_updates_folder_name%" (by default
+     * "%source_absolute_path%/Install/sql/updates") attempting to execute the SQL scripts stored in those files.
+     * If anything goes wrong,
+     * all subsequent files are not executed and the last successfull update is marked as performed. Thus, once the update is triggered
+     * again, it will try to perform all the updates starting from the failed one.
+     *
+     * In order to explicitly skip one or more update files, increase the option LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID in the local config
+     * file of the app being installed to match the last update number that should not be installed.
+     *
+     * @param string $source_absolute_path            
+     * @return string
+     */
+    protected function performModelSourceUpdate($source_absolute_path)
+    {
+        $updates_folder = $this->getSqlFolderAbsolutePath($source_absolute_path) . DIRECTORY_SEPARATOR . $this->getSqlUpdatesFolderName();
+        $id_installed = $this->getApp()->getConfig()->getOption('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID');
+        
+        $updates_installed = array();
+        $updates_failed = array();
+        $error_text = '';
+        
+        $updateFolderDirScan = array_diff(scandir($updates_folder, SCANDIR_SORT_ASCENDING), array(
+            '..',
+            '.'
+        ));
+        foreach ($updateFolderDirScan as $file) {
+            $id = intval(substr($file, 0, 4));
+            if ($id > $id_installed) {
+                if (count($updates_failed) > 0) {
+                    $updates_failed[] = $id;
+                    continue;
+                }
+                $sql = file_get_contents($updates_folder . DIRECTORY_SEPARATOR . $file);
+                // $sql = trim(preg_replace('/\s+/', ' ', $sql));
+                try {
+                    $this->getDataConnection()->transactionStart();
+                    foreach (preg_split("/;\R/", $sql) as $statement) {
+                        if ($statement) {
+                            $this->getDataConnection()->runSql($statement);
+                        }
+                    }
+                    $this->getDataConnection()->transactionCommit();
+                    $updates_installed[] = $id;
+                } catch (\Throwable $e) {
+                    $updates_failed[] = $id;
+                    $error_text = $e->getMessage();
+                }
+            }
+        }
+        // Save the last id in order to skip installed ones next time
+        if (count($updates_installed) > 0) {
+            $this->setLastModelSourceUpdateId(end($updates_installed));
+        }
+        
+        if ($installed_counter = count($updates_installed)) {
+            $result = $this->getSqlConnectorApp()->getTranslator()->translate('SCHEMA_INSTALLER.SUCCESS', array(
+                '%counter%' => $installed_counter
+            ), $installed_counter);
+        }
+        if ($failed_counter = count($updates_failed)) {
+            $result_failed = $this->getSqlConnectorApp()->getTranslator()->translate('SCHEMA_INSTALLER.FAILED', array(
+                '%counter%' => $failed_counter,
+                '%first_failed_id%' => reset($updates_failed),
+                '%error_text%' => $error_text
+            ), $failed_counter);
+        }
+        
+        if ($result && $result_failed) {
+            $result = $result . '. ' . $result_failed;
+        } elseif ($result_failed) {
+            $result = $result_failed;
+        }
+        $result = $result ? " \n" . $result . '. ' : $result;
+        
+        return $result;
+    }
 
-		if ($installed_counter = count($updates_installed)){
-			$result = $this->get_sql_connector_app()->get_translator()->translate('SCHEMA_INSTALLER.SUCCESS', array('%counter%' => $installed_counter), $installed_counter);
-		}
-		if ($failed_counter = count($updates_failed)){
-			$result_failed = $this->get_sql_connector_app()->get_translator()->translate('SCHEMA_INSTALLER.FAILED', array('%counter%' => $failed_counter, '%first_failed_id%' => reset($updates_failed), '%error_text%' => $error_text), $failed_counter);
-		}
+    /**
+     *
+     * @param string $id            
+     * @return $this
+     */
+    protected function setLastModelSourceUpdateId($id)
+    {
+        $filename = $this->getWorkbench()->filemanager()->getPathToConfigFolder() . DIRECTORY_SEPARATOR . $this->getApp()->getConfigFileName();
+        
+        // Load the installation specific config file
+        $config = ConfigurationFactory::create($this->getWorkbench());
+        if (file_exists($filename)) {
+            $config->loadConfigFile($filename);
+        }
+        // Overwrite the option
+        $config->setOption('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID', $id);
+        // Save the file or create one if there was no installation specific config before
+        file_put_contents($filename, $config->exportUxonObject()->toJson(true));
+        
+        return $this;
+    }
 
-		if ($result && $result_failed){
-			$result = $result . '. ' . $result_failed;
-		} elseif ($result_failed){
-			$result = $result_failed;
-		}
-		$result = $result ? " \n" . $result . '. ' : $result;
-
-		return $result;
-	}
-
-	/**
-	 * @param string $id
-	 * @return $this
-	 */
-	protected function set_last_model_source_update_id($id){
-		$filename = $this->get_workbench()->filemanager()->get_path_to_config_folder() . DIRECTORY_SEPARATOR . $this->get_app()->get_config_file_name();
-
-		// Load the installation specific config file
-		$config = ConfigurationFactory::create($this->get_workbench());
-		if (file_exists($filename)){
-			$config->load_config_file($filename);
-		}
-		// Overwrite the option
-		$config->set_option('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID', $id);
-		// Save the file or create one if there was no installation specific config before
-		file_put_contents($filename, $config->export_uxon_object()->to_json(true));
-
-		return $this;
-	}
-
-	/**
-	 *
-	 * @return SqlDataConnectorApp
-	 */
-	protected function get_sql_connector_app(){
-		return $this->get_workbench()->get_app('exface.SqlDataConnector');
-	}
+    /**
+     *
+     * @return SqlDataConnectorApp
+     */
+    protected function getSqlConnectorApp()
+    {
+        return $this->getWorkbench()->getApp('exface.SqlDataConnector');
+    }
 }
 ?>
