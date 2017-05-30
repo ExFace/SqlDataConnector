@@ -39,6 +39,7 @@ class MySQL extends AbstractSQL
     {
         $filter_object_ids = array();
         $where = '';
+        $having = '';
         $group_by = '';
         $group_safe_attribute_aliases = array();
         $order_by = '';
@@ -50,15 +51,20 @@ class MySQL extends AbstractSQL
         $enrichment_joins = array();
         $enrichment_join = '';
         $limit = '';
-        // WHERE
+        
+        // WHERE & HAVING
         $where = $this->buildSqlWhere($this->getFilters());
+        $having = $this->buildSqlHaving($this->getFilters());
         $joins = $this->buildSqlJoins($this->getFilters());
         $filter_object_ids = $this->getFilters()->getObjectIdsSafeForAggregation();
+        
         // Object data source property SQL_SELECT_WHERE -> WHERE
         if ($custom_where = $this->getMainObject()->getDataAddressProperty('SQL_SELECT_WHERE')) {
             $where = $this->appendCustomWhere($where, $custom_where);
         }
         $where = $where ? "\n WHERE " . $where : '';
+        $having = $having ? "\n HAVING " . $having : '';
+        
         // GROUP BY
         $group_uid_alias = '';
         foreach ($this->getAggregations() as $qpart) {
@@ -73,6 +79,7 @@ class MySQL extends AbstractSQL
         if ($group_uid_alias) {
             // $this->addAttribute($group_uid_alias);
         }
+        
         // SELECT
         /* @var $qpart \exface\Core\CommonLogic\QueryBuilder\QueryPartSelect */
         foreach ($this->getAttributes() as $qpart) {
@@ -80,19 +87,20 @@ class MySQL extends AbstractSQL
             if ($qpart->getAttribute()->getDataAddressProperty('SQL_DATA_TYPE') == 'binary') {
                 $this->addBinaryColumn($qpart->getAlias());
             }
-            // If the query has a GROUP BY, we need to put the UID-Attribute in the core select as well as in the enrichment select
-            // otherwise the enrichment joins won't work! Be carefull to apply this rule only to the plain UID column, not to columns
-            // using the UID with aggregate functions
+            
             if ($group_by && $qpart->getAttribute()->getAlias() === $qpart->getAttribute()->getObject()->getUidAlias() && ! $qpart->getAggregateFunction()) {
+                // If the query has a GROUP BY, we need to put the UID-Attribute in the core select as well as in the enrichment select
+                // otherwise the enrichment joins won't work! Be carefull to apply this rule only to the plain UID column, not to columns
+                // using the UID with aggregate functions
                 $selects[] = $this->buildSqlSelect($qpart, null, null, null, 'MAX');
                 $enrichment_select .= ', ' . $this->buildSqlSelect($qpart, 'EXFCOREQ', $this->getShortAlias($qpart->getAlias()));
-            } // If we are not aggregating or the attribute has a group function, add it regulary
-elseif (! $group_by || $qpart->getAggregateFunction() || $this->getAggregation($qpart->getAlias())) {
+            } elseif (! $group_by || $qpart->getAggregateFunction() || $this->getAggregation($qpart->getAlias())) {
+                // If we are not aggregating or the attribute has a group function, add it regulary
                 $selects[] = $this->buildSqlSelect($qpart);
                 $joins = array_merge($joins, $this->buildSqlJoins($qpart));
                 $group_safe_attribute_aliases[] = $qpart->getAttribute()->getAliasWithRelationPath();
-            } // If aggregating, also add attributes, that are aggregated over or can be assumed unique due to set filters
-elseif (in_array($qpart->getAttribute()->getObject()->getId(), $filter_object_ids) !== false) {
+            } elseif (in_array($qpart->getAttribute()->getObject()->getId(), $filter_object_ids) !== false) {
+                // If aggregating, also add attributes, that are aggregated over or can be assumed unique due to set filters
                 $rels = $qpart->getUsedRelations();
                 $first_rel = false;
                 if (! empty($rels)) {
@@ -105,8 +113,9 @@ elseif (in_array($qpart->getAttribute()->getObject()->getId(), $filter_object_id
                 $enrichment_joins = array_merge($enrichment_joins, $this->buildSqlJoins($qpart, 'exfcoreq'));
                 $joins = array_merge($joins, $this->buildSqlJoins($qpart));
                 $group_safe_attribute_aliases[] = $qpart->getAttribute()->getAliasWithRelationPath();
-            } // If aggregating, also add attributes, that belong directly to objects, we are aggregating over (they can be assumed unique too, since their object is unique per row)
-elseif ($group_by && $this->getAggregation($qpart->getAttribute()->getRelationPath()->toString())) {
+            } elseif ($group_by && $this->getAggregation($qpart->getAttribute()->getRelationPath()->toString())) {
+                // If aggregating, also add attributes, that belong directly to objects, we are aggregating 
+                // over (they can be assumed unique too, since their object is unique per row)
                 $selects[] = $this->buildSqlSelect($qpart, null, null, null, 'MAX');
                 $joins = array_merge($joins, $this->buildSqlJoins($qpart));
                 $group_safe_attribute_aliases[] = $qpart->getAttribute()->getAliasWithRelationPath();
@@ -138,9 +147,9 @@ elseif ($group_by && $this->getAggregation($qpart->getAttribute()->getRelationPa
         }
         
         if (($group_by && $where) || $this->getSelectDistinct()) {
-            $query = "\n SELECT " . $distinct . $enrichment_select . " FROM (SELECT " . $select . " FROM " . $from . $join . $where . $group_by . $order_by . ") EXFCOREQ " . $enrichment_join . $order_by . $limit;
+            $query = "\n SELECT " . $distinct . $enrichment_select . " FROM (SELECT " . $select . " FROM " . $from . $join . $where . $group_by . $having . $order_by . ") EXFCOREQ " . $enrichment_join . $order_by . $limit;
         } else {
-            $query = "\n SELECT " . $distinct . $select . " FROM " . $from . $join . $where . $group_by . $order_by . $limit;
+            $query = "\n SELECT " . $distinct . $select . " FROM " . $from . $join . $where . $group_by . $order_by . $having . $limit;
         }
         
         return $query;
@@ -166,6 +175,7 @@ elseif ($group_by && $this->getAggregation($qpart->getAttribute()->getRelationPa
         
         // filters -> WHERE
         $totals_where = $this->buildSqlWhere($this->getFilters());
+        $totals_having = $this->buildSqlHaving($this->getFilters());
         $totals_joins = array_merge($totals_joins, $this->buildSqlJoins($this->getFilters()));
         // Object data source property SQL_SELECT_WHERE -> WHERE
         if ($custom_where = $this->getMainObject()->getDataAddressProperty('SQL_SELECT_WHERE')) {
@@ -182,6 +192,7 @@ elseif ($group_by && $this->getAggregation($qpart->getAttribute()->getRelationPa
         $totals_from = $this->buildSqlFrom();
         $totals_join = implode("\n ", $totals_joins);
         $totals_where = $totals_where ? "\n WHERE " . $totals_where : '';
+        $totals_where = $totals_having ? "\n WHERE " . $totals_having : '';
         $totals_group_by = $group_by ? "\n GROUP BY " . substr($group_by, 2) : '';
         
         // This is a bit of a dirty hack to get the COUNT(*) right if there is a GROUP BY. Just enforce the use of a query with enrichment
@@ -190,9 +201,9 @@ elseif ($group_by && $this->getAggregation($qpart->getAttribute()->getRelationPa
         }
         
         if ($totals_core_select) {
-            $totals_query = "\n SELECT COUNT(*) AS EXFCNT " . $totals_select . " FROM (SELECT " . $totals_core_select . ' FROM ' . $totals_from . $totals_join . $totals_where . $totals_group_by . ") EXFCOREQ";
+            $totals_query = "\n SELECT COUNT(*) AS EXFCNT " . $totals_select . " FROM (SELECT " . $totals_core_select . ' FROM ' . $totals_from . $totals_join . $totals_where . $totals_group_by . $totals_having . ") EXFCOREQ";
         } else {
-            $totals_query = "\n SELECT COUNT(*) AS EXFCNT FROM " . $totals_from . $totals_join . $totals_where . $totals_group_by;
+            $totals_query = "\n SELECT COUNT(*) AS EXFCNT FROM " . $totals_from . $totals_join . $totals_where . $totals_group_by . $totals_having;
         }
         
         return $totals_query;

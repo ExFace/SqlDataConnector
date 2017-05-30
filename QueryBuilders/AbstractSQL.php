@@ -16,6 +16,7 @@ use exface\SqlDataConnector\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 use exface\Core\CommonLogic\QueryBuilder\QueryPartSelect;
 use exface\Core\CommonLogic\Model\Relation;
+use exface\Core\CommonLogic\DataSheets\DataAggregator;
 
 /**
  * A query builder for oracle SQL.
@@ -836,6 +837,98 @@ else {
     }
 
     /**
+     * Builds the SQL HAVING clause based on the filter group of this query. 
+     * This is similar to buildSqlWhereCondition but it takes care of filters 
+     * with aggregators.
+     * 
+     * Returns an empty string if no HAVING clause is needed for this query.
+     * 
+     * @param QueryPartFilterGroup $qpart            
+     * @param string $rely_on_joins            
+     * @return string
+     * 
+     * @see BuildSqlWhere
+     */
+    protected function buildSqlHaving(QueryPartFilterGroup $qpart, $rely_on_joins = true)
+    {
+        $having = '';
+        $op = $this->buildSqlLogicalOperator($qpart->getOperator());
+        
+        foreach ($qpart->getFilters() as $qpart_fltr) {
+            if ($fltr_string = $this->buildSqlHavingCondition($qpart_fltr, $rely_on_joins)) {
+                $having .= "\n " . ($having ? $op . " " : '') . $fltr_string;
+            }
+        }
+        
+        foreach ($qpart->getNestedGroups() as $qpart_grp) {
+            if ($grp_string = $this->buildSqlHaving($qpart_grp, $rely_on_joins)) {
+                $having .= "\n " . ($having ? $op . " " : '') . "(" . $grp_string . ")";
+            }
+        }
+        
+        return $having;
+    }
+
+    /**
+     * Builds the SQL for a condition within the HAVING clause. This is similar
+     * to buildSqlWhereCondition but it takes care of filters with aggregators.
+     * 
+     * @param QueryPartFilter $qpart            
+     * @param boolean $rely_on_joins            
+     * @return string
+     * 
+     * @see buildSqlWhereCondition()
+     */
+    protected function buildSqlHavingCondition(QueryPartFilter $qpart, $rely_on_joins = true)
+    {
+        // The query part belongs in the WHERE-clause if it does not have an aggregator
+        if (! $this->checkFilterBelongsInHavingClause($qpart, $rely_on_joins)) {
+            return '';
+        }
+        
+        $val = $qpart->getCompareValue();
+        $attr = $qpart->getAttribute();
+        $comp = $qpart->getComparator();
+        
+        $select = $this->buildSqlGroupFunction($qpart);
+        $where = $qpart->getDataAddressProperty('WHERE');
+        $object_alias = ($attr->getRelationPath()->toString() ? $attr->getRelationPath()->toString() : $this->getMainObject()->getAlias());
+        
+        // doublecheck that the attribut is known
+        if (! ($select || $where) || $val === '') {
+            throw new QueryBuilderException('Illegal filter on object "' . $this->getMainObject()->getAlias() . ', expression "' . $qpart->getAlias() . '", Value: "' . $val . '".');
+            return false;
+        }
+        
+        // build the having
+        if ($where) {
+            // check if it has an explicit where clause. If not try to filter based on the select clause
+            $output = str_replace(array(
+                '[#alias#]',
+                '[#value#]'
+            ), array(
+                $object_alias . $this->getQueryId(),
+                $val
+            ), $where);
+        } else {
+            // Determine, what we are going to compare to the value: a subquery or a column
+            if ($this->checkForSqlStatement($attr->getDataAddress())) {
+                $subj = str_replace(array(
+                    '[#alias#]'
+                ), array(
+                    $this->getShortAlias($object_alias) . $this->getQueryId()
+                ), $select);
+            } else {
+                $subj = $select;
+            }
+            // Do the actual comparing
+            $output = $this->buildSqlWhereComparator($subj, $comp, $val, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'));
+        }
+        
+        return $output;
+    }
+
+    /**
      * Builds a where statement for a group of filters, concatennating the conditions with the goups logical operator
      * (e.g.
      * " condition1 AND condition 2 AND (condition3 OR condition4) ")
@@ -846,21 +939,7 @@ else {
     protected function buildSqlWhere(QueryPartFilterGroup $qpart, $rely_on_joins = true)
     {
         $where = '';
-        
-        switch ($qpart->getOperator()) {
-            case EXF_LOGICAL_AND:
-                $op = 'AND';
-                break;
-            case EXF_LOGICAL_OR:
-                $op = 'OR';
-                break;
-            case EXF_LOGICAL_XOR:
-                $op = 'XOR';
-                break;
-            case EXF_LOGICAL_NOT:
-                $op = 'NOT';
-                break;
-        }
+        $op = $this->buildSqlLogicalOperator($qpart->getOperator());
         
         foreach ($qpart->getFilters() as $qpart_fltr) {
             if ($fltr_string = $this->buildSqlWhereCondition($qpart_fltr, $rely_on_joins)) {
@@ -878,31 +957,79 @@ else {
     }
 
     /**
+     * Translates the given condition group operator into it's SQL version: EXF_LOGICAL_AND => AND, etc.
+     *
+     * @param string $operator            
+     * @return string
+     */
+    protected function buildSqlLogicalOperator($operator)
+    {
+        switch ($operator) {
+            case EXF_LOGICAL_AND:
+                $op = 'AND';
+                break;
+            case EXF_LOGICAL_OR:
+                $op = 'OR';
+                break;
+            case EXF_LOGICAL_XOR:
+                $op = 'XOR';
+                break;
+            case EXF_LOGICAL_NOT:
+                $op = 'NOT';
+                break;
+        }
+        return $op;
+    }
+
+    /**
+     * Returns TRUE if the given filter query part belongs in the HAVING clause 
+     * of the current query rather than the WHERE clause.
+     *
+     * This is the case if the query part has an aggregator and it is not 
+     * related via reverse relation. In the latter case, a subquery will be 
+     * added to the where clause which - in turn - will normally contain the
+     * HAVING clause
+     *
+     * @param QueryPartFilter $qpart            
+     * @param boolean $rely_on_joins            
+     * @return boolean
+     */
+    protected function checkFilterBelongsInHavingClause(QueryPartFilter $qpart, $rely_on_joins = true)
+    {
+        return $qpart->getAggregateFunction() && ! $qpart->getFirstRelation(Relation::RELATION_TYPE_REVERSE) ? true : false;
+    }
+
+    /**
      * Builds a single filter condition for the where clause (e.g.
      * " table.column LIKE '%string%' ")
      *
      * @param \exface\Core\CommonLogic\QueryBuilder\QueryPartFilter $qpart            
      * @return boolean|string
      */
-    protected function buildSqlWhereCondition(\exface\Core\CommonLogic\QueryBuilder\QueryPartFilter $qpart, $rely_on_joins = true)
+    protected function buildSqlWhereCondition(QueryPartFilter $qpart, $rely_on_joins = true)
     {
+        // The given
+        if ($this->checkFilterBelongsInHavingClause($qpart, $rely_on_joins)) {
+            return '';
+        }
+        
         $val = $qpart->getCompareValue();
         $attr = $qpart->getAttribute();
         $comp = $qpart->getComparator();
         
-        // always use the equals comparator for foreign keys! It's faster!
         if ($attr->isRelation() && $comp != EXF_COMPARATOR_IN) {
+            // always use the equals comparator for foreign keys! It's faster!
             $comp = EXF_COMPARATOR_EQUALS;
-        } elseif ($attr->getAlias() == $this->getMainObject()->getUidAlias() && $comp != EXF_COMPARATOR_IN) {
+        } elseif ($attr->isExactly($this->getMainObject()->getUidAttribute()) && $comp != EXF_COMPARATOR_IN && ! $qpart->getAggregateFunction()) {
             $comp = EXF_COMPARATOR_EQUALS;
-        } // also use equals for the NUMBER data type, but make sure, the value to compare to is really a number (otherwise the query will fail!)
-elseif ($attr->getDataType()->is(EXF_DATA_TYPE_NUMBER) && $comp == EXF_COMPARATOR_IS && is_numeric($val)) {
+        } elseif ($attr->getDataType()->is(EXF_DATA_TYPE_NUMBER) && $comp == EXF_COMPARATOR_IS && is_numeric($val)) {
+            // also use equals for the NUMBER data type, but make sure, the value to compare to is really a number (otherwise the query will fail!)
             $comp = EXF_COMPARATOR_EQUALS;
-        } // also use equals for the BOOLEAN data type
-elseif ($attr->getDataType()->is(EXF_DATA_TYPE_BOOLEAN) && $comp == EXF_COMPARATOR_IS) {
+        } elseif ($attr->getDataType()->is(EXF_DATA_TYPE_BOOLEAN) && $comp == EXF_COMPARATOR_IS) {
+            // also use equals for the BOOLEAN data type
             $comp = EXF_COMPARATOR_EQUALS;
-        } // also use equals for the NUMBER data type, but make sure, the value to compare to is really a number (otherwise the query will fail!)
-elseif ($attr->getDataType()->is(EXF_DATA_TYPE_DATE) && $comp == EXF_COMPARATOR_IS) {
+        } elseif ($attr->getDataType()->is(EXF_DATA_TYPE_DATE) && $comp == EXF_COMPARATOR_IS) {
+            // also use equals for the NUMBER data type, but make sure, the value to compare to is really a number (otherwise the query will fail!)
             $comp = EXF_COMPARATOR_EQUALS;
         }
         
@@ -1021,10 +1148,12 @@ elseif ($attr->getDataType()->is(EXF_DATA_TYPE_DATE) && $comp == EXF_COMPARATOR_
     }
 
     /**
-     * Builds a WHERE clause with a subquery (e.g.
-     * "column IN ( SELECT ... )" ). This is mainly used to handle filters over reversed relations, but also
-     * for filters on joined columns in UPDATE queries, where the main query does not support joining. The optional parameter $rely_on_joins controls whether
-     * the method can rely on the main query have all neccessary joins.
+     * Builds a WHERE clause with a subquery (e.g. "column IN ( SELECT ... )" ). 
+     * 
+     * This is mainly used to handle filters over reversed relations, but also
+     * for filters on joined columns in UPDATE queries, where the main query 
+     * does not support joining. The optional parameter $rely_on_joins controls 
+     * whether the method can rely on the main query have all neccessary joins.
      *
      * @param \exface\Core\CommonLogic\QueryBuilder\QueryPartFilter $qpart            
      * @param boolean $rely_on_joins            
@@ -1057,6 +1186,15 @@ elseif ($attr->getDataType()->is(EXF_DATA_TYPE_DATE) && $comp == EXF_COMPARATOR_
                 // If we are dealing with a reverse relation, build a subquery to select foreign keys from rows of the joined tables,
                 // that match the given filter
                 $rel_filter = $qpart->getAttribute()->rebase($qpart_rel_path->getSubpath($qpart_rel_path->getIndexOf($start_rel) + 1))->getAliasWithRelationPath();
+                // Remember to keep the aggregator of the attribute filtered over. Since we are interested in a list of keys, the
+                // subquery should GROUP BY these kees.
+                if ($qpart->getAggregateFunction()) {
+                    // IDEA HAVING-subqueries can be very slow. Perhaps we can optimize the subquery a litte in certain cases:
+                    // e.g. if we are filtering over a SUM of natural numbers with "> 0", we could simply add a "> 0" filter 
+                    // without any aggregation and it should yield the same results
+                    $rel_filter .= DataAggregator::AGGREGATION_SEPARATOR . $qpart->getAggregateFunction();
+                    $relq->addAggregation($start_rel->getForeignKeyAlias());
+                }
                 $relq->addAttribute($start_rel->getForeignKeyAlias());
                 // Add the filter relative to the first reverse relation with the same $value and $comparator
                 $relq->addFilterFromString($rel_filter, $qpart->getCompareValue(), $qpart->getComparator());
@@ -1083,10 +1221,10 @@ elseif ($attr->getDataType()->is(EXF_DATA_TYPE_DATE) && $comp == EXF_COMPARATOR_
 
     /**
      * Builds the contents of an ORDER BY statement for one column (e.g.
-     * "ATTRIBUTE_ALIAS DESC" to sort via
-     * the column ALIAS of the table ATTRIBUTE). The result does not contain the words "ORDER BY", the
-     * results of multiple calls to this method with different attributes can be concatennated into
-     * a comple ORDER BY clause.
+     * "ATTRIBUTE_ALIAS DESC" to sort via the column ALIAS of the table 
+     * ATTRIBUTE). The result does not contain the words "ORDER BY", the 
+     * results of multiple calls to this method with different attributes can 
+     * be concatennated into a comple ORDER BY clause.
      *
      * @param \exface\Core\CommonLogic\QueryBuilder\QueryPartSorter $qpart            
      * @return string
@@ -1124,7 +1262,7 @@ elseif ($attr->getDataType()->is(EXF_DATA_TYPE_DATE) && $comp == EXF_COMPARATOR_
             if (is_null($select_from)) {
                 $select_from = $qpart->getAttribute()->getRelationPath()->toString() ? $qpart->getAttribute()->getRelationPath()->toString() : $this->getMainObject()->getAlias();
             }
-            $output = ($select_from ? $this->getShortAlias($select_from) . '.' : '') . $this->getShortAlias($qpart->getAttribute()->getDataAddress());
+            $output = ($select_from ? $this->getShortAlias($select_from) . $this->getQueryId() . '.' : '') . $qpart->getAttribute()->getDataAddress();
         }
         return $output;
     }
@@ -1174,11 +1312,9 @@ elseif ($attr->getDataType()->is(EXF_DATA_TYPE_DATE) && $comp == EXF_COMPARATOR_
 
     /**
      * Checks, if the given string is complex SQL-statement (in contrast to simple column references).
-     * It is
-     * important to know this, because you cannot write to statements etc.
+     * It is important to know this, because you cannot write to statements etc.
      *
-     * @param
-     *            string string
+     * @param string $string            
      * @return boolean
      */
     protected function checkForSqlStatement($string)

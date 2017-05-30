@@ -33,6 +33,7 @@ class MsSQL extends AbstractSQL
     {
         $filter_object_ids = array();
         $where = '';
+        $having = '';
         $group_by = '';
         $group_safe_attribute_aliases = array();
         $order_by = '';
@@ -47,6 +48,7 @@ class MsSQL extends AbstractSQL
         
         // WHERE
         $where = $this->buildSqlWhere($this->getFilters());
+        $having = $this->buildSqlHaving($this->getFilters());
         $joins = $this->buildSqlJoins($this->getFilters());
         $filter_object_ids = $this->getFilters()->getObjectIdsSafeForAggregation();
         // Object data source property SQL_SELECT_WHERE -> WHERE
@@ -54,6 +56,7 @@ class MsSQL extends AbstractSQL
             $where = $this->appendCustomWhere($where, $custom_where);
         }
         $where = $where ? "\n WHERE " . $where : '';
+        $having = $having ? "\n WHERE " . $having : '';
         
         $has_attributes_with_reverse_relations = count($this->getAttributesWithReverseRelations());
         
@@ -158,12 +161,12 @@ elseif (! $group_by || $qpart->getAggregateFunction() || $this->getAggregation($
         
         if (($group_by && ($where || $has_attributes_with_reverse_relations)) || $this->getSelectDistinct()) {
             if (count($this->getAttributesWithReverseRelations()) > 0) {
-                $query = "\n SELECT " . $distinct . $enrichment_select . " FROM (SELECT " . $select . " FROM " . $from . $join . $where . ") EXFCOREQ " . $enrichment_join . $group_by . $order_by . $limit;
+                $query = "\n SELECT " . $distinct . $enrichment_select . " FROM (SELECT " . $select . " FROM " . $from . $join . $where . ") EXFCOREQ " . $enrichment_join . $group_by . $having . $order_by . $limit;
             } else {
-                $query = "\n SELECT " . $distinct . $enrichment_select . " FROM (SELECT " . $select . " FROM " . $from . $join . $where . $group_by . ") EXFCOREQ " . $enrichment_join . $order_by . $limit;
+                $query = "\n SELECT " . $distinct . $enrichment_select . " FROM (SELECT " . $select . " FROM " . $from . $join . $where . $group_by . $having . ") EXFCOREQ " . $enrichment_join . $order_by . $limit;
             }
         } else {
-            $query = "\n SELECT " . $distinct . $select . " FROM " . $from . $join . $where . $group_by . $order_by . $limit;
+            $query = "\n SELECT " . $distinct . $select . " FROM " . $from . $join . $where . $group_by . $having . $order_by . $limit;
         }
         
         return $query;
@@ -171,6 +174,7 @@ elseif (! $group_by || $qpart->getAggregateFunction() || $this->getAggregation($
 
     public function buildSqlQueryTotals()
     {
+        $group_by = '';
         $totals_joins = array();
         $totals_core_selects = array();
         $totals_selects = array();
@@ -189,6 +193,7 @@ elseif (! $group_by || $qpart->getAggregateFunction() || $this->getAggregation($
         
         // filters -> WHERE
         $totals_where = $this->buildSqlWhere($this->getFilters());
+        $totals_having = $this->buildSqlHaving($this->getFilters());
         $totals_joins = array_merge($totals_joins, $this->buildSqlJoins($this->getFilters()));
         
         // Object data source property SQL_SELECT_WHERE -> WHERE
@@ -207,6 +212,7 @@ elseif (! $group_by || $qpart->getAggregateFunction() || $this->getAggregation($
         $totals_from = $this->buildSqlFrom();
         $totals_join = implode("\n ", $totals_joins);
         $totals_where = $totals_where ? "\n WHERE " . $totals_where : '';
+        $totals_having = $totals_having ? "\n WHERE " . $totals_having : '';
         $totals_group_by = $group_by ? "\n GROUP BY " . substr($group_by, 2) : '';
         
         // This is a bit of a dirty hack to get the COUNT(*) right if there is a GROUP BY. Just enforce the use of a query with enrichment
