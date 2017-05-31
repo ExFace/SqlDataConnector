@@ -87,8 +87,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller
 
     /**
      *
-     * @param
-     *            $value
+     * @param string $value
      * @return $this
      */
     public function setSqlFolderName($value)
