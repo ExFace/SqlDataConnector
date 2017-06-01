@@ -192,7 +192,7 @@ class MySQL extends AbstractSQL
         $totals_from = $this->buildSqlFrom();
         $totals_join = implode("\n ", $totals_joins);
         $totals_where = $totals_where ? "\n WHERE " . $totals_where : '';
-        $totals_where = $totals_having ? "\n WHERE " . $totals_having : '';
+        $totals_having = $totals_having ? "\n WHERE " . $totals_having : '';
         $totals_group_by = $group_by ? "\n GROUP BY " . substr($group_by, 2) : '';
         
         // This is a bit of a dirty hack to get the COUNT(*) right if there is a GROUP BY. Just enforce the use of a query with enrichment
