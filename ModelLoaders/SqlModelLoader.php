@@ -465,6 +465,7 @@ Relation::RELATION_TYPE_REVERSE); // relation type
     {
         $installer = new SqlSchemaInstaller(NameResolver::createFromString('exface.SqlDataConnector', NameResolver::OBJECT_TYPE_APP, $this->getDataConnection()->getWorkbench()));
         $installer->setDataConnection($this->getDataConnection());
+        $installer->setLastUpdateIdConfigOption('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID');
         return $installer;
     }
 }

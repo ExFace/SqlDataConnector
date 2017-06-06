@@ -4,17 +4,44 @@ namespace exface\SqlDataConnector;
 use exface\Core\CommonLogic\AbstractApp;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\Core\CommonLogic\AbstractAppInstaller;
-use exface\Core\Factories\ConfigurationFactory;
+use exface\Core\Interfaces\AppInterface;
+use exface\Core\Exceptions\Configuration\ConfigOptionNotFoundError;
 
 /**
- * This installer creates and manages an SQL schema for an ExFace app.
+ * This creates and manages SQL databases and performs SQL updates.
  *
- * If the app has it's own SQL database (= is not built on top of an existing database), changes to the SQL schema must go
- * hand-in-hand with changes of the meta model and the code. This installer takes care of updating the schema by performing
- * SQL scripts stored in a specifal folder within the app (by default "install/sql"). These scripts must follow a simple
- * naming convention: they start with a number followed by a dot and a textual description. Update scripts are executed
- * in the order of the leading number. The number of the last script executed is stored in the installation scope of the
- * app's config, so the next time the installer runs, only new updates will get executed.
+ * If the app has it's own SQL database (= is not built on top of an existing 
+ * data source), changes to the SQL schema must go hand-in-hand with changes of 
+ * the meta model and the code. This installer takes care of updating the schema 
+ * by performing SQL scripts stored in a specifal folder within the app (by 
+ * default "install/sql"). These scripts must follow a simple naming convention: 
+ * they start with a number followed by a dot and a textual description. Update 
+ * scripts are executed in the order of the leading number. The number of the 
+ * last script executed is stored in the installation scope of the app's config, 
+ * so the next time the installer runs, only new updates will get executed.
+ * 
+ * How to add an SqlSchemaInstaller to your app:
+ * 1) Make sure, your app includes the following folder structure: Install/sql/updates
+ * 2) Place your init scripts in Install/sql and your update scripts in the
+ * updates subfolder. The scripts will be executed in alphabetic order. Pay
+ * attention to the update naming convention described above.
+ * 3) Add the SqlSchemaInstaller to the getInstaller() method of your app as
+ * follows:
+ * 
+ * public function getInstaller(InstallerInterface $injected_installer = null)
+    {
+        $installer = parent::getInstaller($injected_installer);
+        
+        // ...receding installers here...
+        
+        $schema_installer = new SqlSchemaInstaller($this->getNameResolver());
+        $schema_installer->setDataConnection(...);
+        $installer->addInstaller($schema_installer);
+        
+        // ...subsequent installers here...
+        
+        return $installer;
+    }
  *
  * @author Andrej Kabachnik
  *        
@@ -31,6 +58,8 @@ class SqlSchemaInstaller extends AbstractAppInstaller
     private $sql_uninstall_folder_name = 'uninstall';
 
     private $data_connection = null;
+    
+    private $last_update_id_config_option = 'INSTALLER.SQL_UPDATE_LAST_PERFORMED_ID';
 
     /**
      *
@@ -196,7 +225,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller
      * all subsequent files are not executed and the last successfull update is marked as performed. Thus, once the update is triggered
      * again, it will try to perform all the updates starting from the failed one.
      *
-     * In order to explicitly skip one or more update files, increase the option LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID in the local config
+     * In order to explicitly skip one or more update files, increase the option INSTALLER.SQL_UPDATE_LAST_PERFORMED_ID in the local config
      * file of the app being installed to match the last update number that should not be installed.
      *
      * @param string $source_absolute_path            
@@ -205,7 +234,12 @@ class SqlSchemaInstaller extends AbstractAppInstaller
     protected function performModelSourceUpdate($source_absolute_path)
     {
         $updates_folder = $this->getSqlFolderAbsolutePath($source_absolute_path) . DIRECTORY_SEPARATOR . $this->getSqlUpdatesFolderName();
-        $id_installed = $this->getApp()->getConfig()->getOption('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID');
+        
+        try {
+            $id_installed = $this->getApp()->getConfig()->getOption($this->getLastUpdateIdConfigOption());
+        } catch (ConfigOptionNotFoundError $e){
+            $id_installed = 0;
+        }
         
         $updates_installed = array();
         $updates_failed = array();
@@ -274,18 +308,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller
      */
     protected function setLastModelSourceUpdateId($id)
     {
-        $filename = $this->getWorkbench()->filemanager()->getPathToConfigFolder() . DIRECTORY_SEPARATOR . $this->getApp()->getConfigFileName();
-        
-        // Load the installation specific config file
-        $config = ConfigurationFactory::create($this->getWorkbench());
-        if (file_exists($filename)) {
-            $config->loadConfigFile($filename);
-        }
-        // Overwrite the option
-        $config->setOption('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID', $id);
-        // Save the file or create one if there was no installation specific config before
-        file_put_contents($filename, $config->exportUxonObject()->toJson(true));
-        
+        $this->getApp()->getConfig()->setOption($this->getLastUpdateIdConfigOption(), $id, AppInterface::CONFIG_SCOPE_INSTALLATION); 
         return $this;
     }
 
@@ -297,5 +320,32 @@ class SqlSchemaInstaller extends AbstractAppInstaller
     {
         return $this->getWorkbench()->getApp('exface.SqlDataConnector');
     }
+
+    /**
+     * Returns the configuration key used to store the last SQL update id in
+     * the app, that this installer installs.
+     * 
+     * Default: INSTALLER.SQL_UPDATE_LAST_PERFORMED_ID
+     * 
+     * @return string
+     */
+    public function getLastUpdateIdConfigOption()
+    {
+        return $this->last_update_id_config_option;
+    }
+
+    /**
+     * Changes the name of the configuration key to be used to store the last
+     * SQL update id. The default is INSTALLER.LAST_PERFORMED_SQL_UPDATE_ID.
+     * 
+     * @param string $last_update_id_config_option
+     * @return SqlSchemaInstaller
+     */
+    public function setLastUpdateIdConfigOption($string)
+    {
+        $this->last_update_id_config_option = $string;
+        return $this;
+    }
+ 
 }
 ?>
