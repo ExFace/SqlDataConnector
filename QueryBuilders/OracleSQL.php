@@ -464,7 +464,7 @@ class OracleSQL extends AbstractSQL
     }
 
     /**
-     * (non-PHPdoc)
+     * {@inheritdoc}
      *
      * @see \exface\Core\CommonLogic\QueryBuilder\AbstractQueryBuilder::create()
      */

@@ -178,7 +178,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder
     }
 
     /**
-     * (non-PHPdoc)
+     * {@inheritdoc}
      *
      * @see \exface\Core\CommonLogic\QueryBuilder\AbstractQueryBuilder::create()
      *
@@ -289,7 +289,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder
      * is needed, a separate update query for the meta object of that attribute will be created and will get executed after the
      * main query. Subqueries are executed in the order in which the respective attributes were added to the QueryBuilder.
      *
-     * (non-PHPdoc)
+     * {@inheritdoc}
      *
      * @see \exface\Core\CommonLogic\QueryBuilder\AbstractQueryBuilder::update()
      */
@@ -464,7 +464,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder
     }
 
     /**
-     * (non-PHPdoc)
+     * {@inheritdoc}
      *
      * @see \exface\Core\CommonLogic\QueryBuilder\AbstractQueryBuilder::delete()
      */
