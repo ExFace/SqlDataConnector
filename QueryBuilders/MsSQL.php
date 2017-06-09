@@ -12,7 +12,7 @@ namespace exface\SqlDataConnector\QueryBuilders;
  * @author Andrej Kabachnik
  *        
  */
-class MsSQL extends AbstractSQL
+class MsSQL extends AbstractSqlBuilder
 {
 
     // CONFIG

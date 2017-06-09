@@ -18,7 +18,7 @@ use exface\Core\CommonLogic\Model\RelationPath;
  * @author Andrej Kabachnik
  *        
  */
-class MySQL extends AbstractSQL
+class MySQL extends AbstractSqlBuilder
 {
 
     // CONFIG

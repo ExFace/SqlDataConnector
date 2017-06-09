@@ -9,15 +9,28 @@ use exface\Core\CommonLogic\Model\Relation;
 /**
  * A query builder for Oracle SQL.
  *
- * Data address properties for objects:
- * - SQL_SELECT_WHERE - custom where statement automatically appended to direct selects for this object (not if the object's table
- * is joined!). Usefull for generic tables, where different meta objects are stored and distinguished by specific keys in a
- * special column. The value of SQL_SELECT_WHERE should contain the [#alias#] placeholder: e.g. [#alias#].mycolumn = 'myvalue'.
+ * # Data source options
+ * =====================
+ * 
+ * The following options are available in addition to the ones of the
+ * AbstractSqlBuilder
+ * 
+ * ## On object level
+ * ---------------------
+ *  
+ * - **SQL_SELECT_WHERE** - custom where statement automatically appended to 
+ * direct selects for this object (not if the object's table is joined!). 
+ * Usefull for generic tables, where different meta objects are stored and 
+ * distinguished by specific keys in a special column. The value of 
+ * SQL_SELECT_WHERE should contain the [#alias#] placeholder: e.g. 
+ * [#alias#].mycolumn = 'myvalue'.
+ * 
+ * @see AbstractSqlBuilder
  *
  * @author Andrej Kabachnik
  *        
  */
-class OracleSQL extends AbstractSQL
+class OracleSQL extends AbstractSqlBuilder
 {
 
     // CONFIG
@@ -455,8 +468,7 @@ class OracleSQL extends AbstractSQL
     /**
      *
      * {@inheritdoc}
-     *
-     * @see \exface\SqlDataConnector\QueryBuilders\AbstractSQL::escapeString()
+     * @see \exface\SqlDataConnector\QueryBuilders\AbstractSqlBuilder::escapeString()
      */
     protected function escapeString($string)
     {
@@ -487,23 +499,21 @@ class OracleSQL extends AbstractSQL
                 continue;
             }
             // Ignore attributes, that do not reference an sql column (= do not have a data address at all)
-            if (! $attr->getDataAddress() || $this->checkForSqlStatement($attr->getDataAddress())) {
+            if (! $qpart->getDataAddressProperty('SQL_INSERT') && (! $attr->getDataAddress() || $this->checkForSqlStatement($attr->getDataAddress()))) {
                 continue;
             }
             // Save the query part for later processing if it is the object's UID
             if ($attr->isUidForObject()) {
                 $uid_qpart = $qpart;
             }
-            
-            $columns[$attr->getDataAddress()] = $attr->getDataAddress();
+            $column = $qpart->getDataAddressProperty('SQL_INSERT_DATA_ADDRESS') ? $qpart->getDataAddressProperty('SQL_INSERT_DATA_ADDRESS') : $attr->getDataAddress();
+            $columns[$column] = $column;
             $custom_insert_sql = $qpart->getDataAddressProperty('SQL_INSERT');
             foreach ($qpart->getValues() as $row => $value) {
-                if ($custom_insert_sql && (is_null($value) || $value === '')) {
-                    // If there is a custom insert SQL for the attribute, use it ONLY if there is no value
-                    // Otherwise there would not be any possibility to save explicit values
-                    // FIXME using custom insert SQL _or_ value makes it impossible to create SQL wrappers for values. Perhaps a better way
-                    // would be to write an IF-SQL-statement here?
-                    $values[$row][$attr->getDataAddress()] = str_replace(array(
+                $value = $this->prepareInputValue($value, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'));
+                if ($custom_insert_sql) {
+                    // If there is a custom insert SQL for the attribute, use it
+                    $values[$row][$column] = str_replace(array(
                         '[#alias#]',
                         '[#value#]'
                     ), array(
@@ -511,7 +521,7 @@ class OracleSQL extends AbstractSQL
                         $value
                     ), $custom_insert_sql);
                 } else {
-                    $values[$row][$attr->getDataAddress()] = $this->prepareInputValue($value, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'));
+                    $values[$row][$attr->getDataAddress()] = $value;
                 }
             }
         }
