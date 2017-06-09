@@ -18,7 +18,7 @@ class SapHanaSqlBuilder extends MySQL
      *
      * {@inheritdoc}
      *
-     * @see \exface\SqlDataConnector\QueryBuilders\AbstractSQL::buildSqlGroupBy()
+     * @see \exface\SqlDataConnector\QueryBuilders\AbstractSqlBuilder::buildSqlGroupBy()
      */
     protected function buildSqlGroupBy(\exface\Core\CommonLogic\QueryBuilder\QueryPart $qpart, $select_from = null)
     {

@@ -13,18 +13,44 @@ use exface\Core\Exceptions\DataTypeValidationError;
 use exface\Core\DataTypes\NumberDataType;
 use exface\SqlDataConnector\DataConnectors\AbstractSqlConnector;
 use exface\SqlDataConnector\SqlDataQuery;
-use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 use exface\Core\CommonLogic\QueryBuilder\QueryPartSelect;
 use exface\Core\CommonLogic\Model\Relation;
 use exface\Core\CommonLogic\DataSheets\DataAggregator;
 
 /**
- * A query builder for oracle SQL.
+ * A query builder for generic SQL syntax.
+ * 
+ * # Data source options
+ * =====================
+ * 
+ * ## On attribute level
+ * ---------------------
+ * 
+ * - **SQL_DATA_TYPE** - tells the query builder what data type the column has.
+ * This is only needed for complex types that require conversion: e.g. binary,
+ * LOB, etc. Refer to the description of the specific query builder for concrete
+ * usage instructions.
+ * 
+ * - **SQL_INSERT** - custom SQL statement for the value in an INSERT statement.
+ * The placeholders [#alias#] and [#value#] are supported. This is usefull to
+ * write wrappers for values (e.g. "to_clob('[#value#]')" to save a string value 
+ * to an Oracle CLOB column) or generators (e.g. you could use "UUID()" in MySQL 
+ * to have a column always created with a UUID). If you need to use a generator
+ * only if no value is given, use something like this: 
+ * IF([#value#]!='', [#value#], UUID())
+ * 
+ * - **SQL_INSERT_DATA_ADDRESS** - replaces the data address for INSERT queries
+ * 
+ * - **SQL_UPDATE** - custom SQL statement for the value in an UPDATE statement.
+ * Works similarly to SQL_INSERT.
+ * 
+ * - **SQL_UPDATE_DATA_ADDRESS** - replaces the data address for INSERT queries.
+ * Supports the placeholder [#alias#]
  *
  * @author Andrej Kabachnik
  *        
  */
-abstract class AbstractSQL extends AbstractQueryBuilder
+abstract class AbstractSqlBuilder extends AbstractQueryBuilder
 {
 
     // CONFIG
@@ -218,11 +244,14 @@ abstract class AbstractSQL extends AbstractQueryBuilder
             $columns[$attr->getDataAddress()] = $attr->getDataAddress();
             $custom_insert_sql = $qpart->getDataAddressProperty('SQL_INSERT');
             foreach ($qpart->getValues() as $row => $value) {
-                if ($custom_insert_sql && (is_null($value) || $value === '')) {
-                    // If there is a custom insert SQL for the attribute, use it ONLY if there is no value
-                    // Otherwise there would not be any possibility to save explicit values
-                    // FIXME using custom insert SQL _or_ value makes it impossible to create SQL wrappers for values. Perhaps a better way
-                    // would be to write an IF-SQL-statement here?
+                $value = $this->prepareInputValue($value, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'));
+                if ($custom_insert_sql) {
+                    // If there is a custom insert SQL for the attribute, use it 
+                    // NOTE: if you just write some kind of generator here, it 
+                    // will make it impossible to save values passed to the query
+                    // via setValues() - they will always be replaced by the 
+                    // custom SQL. To allow explicitly set values too, the
+                    // INSERT_SQL must include something like IF('[#value#]'!=''...)
                     $values[$row][$attr->getDataAddress()] = str_replace(array(
                         '[#alias#]',
                         '[#value#]'
@@ -231,7 +260,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder
                         $value
                     ), $custom_insert_sql);
                 } else {
-                    $values[$row][$attr->getDataAddress()] = $this->prepareInputValue($value, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'));
+                    $values[$row][$attr->getDataAddress()] = $value;
                 }
             }
         }
@@ -326,33 +355,54 @@ abstract class AbstractSQL extends AbstractQueryBuilder
             }
             
             // Ignore attributes, that do not reference an sql column (= do not have a data address at all)
-            if ($this->checkForSqlStatement($attr->getDataAddress())) {
+            if (!$qpart->getDataAddressProperty('SQL_UPDATE') && $this->checkForSqlStatement($attr->getDataAddress())) {
                 continue;
             }
             
+            if ($qpart->getDataAddressProperty('SQL_UPDATE_DATA_ADDRESS')){
+                $column = str_replace('[#alias#]', $this->getShortAlias($this->getMainObject()->getAlias()), $qpart->getDataAddressProperty('SQL_UPDATE_DATA_ADDRESS'));
+            } else {
+                $column = $this->getShortAlias($this->getMainObject()->getAlias()) . '.' . $attr->getDataAddress();
+            }
+            
+            $custom_update_sql = $qpart->getDataAddressProperty('SQL_UPDATE');
+                        
             if (count($qpart->getValues()) == 1) {
                 $values = $qpart->getValues();
                 $value = $this->prepareInputValue(reset($values), $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'));
-                $updates_by_filter[] = $this->getShortAlias($this->getMainObject()->getAlias()) . '.' . $attr->getDataAddress() . ' = ' . $value;
+                if ($custom_update_sql) {
+                    // If there is a custom update SQL for the attribute, use it ONLY if there is no value
+                    // Otherwise there would not be any possibility to save explicit values
+                    $updates_by_filter[]= $column . ' = ' . $this->buildSqlUpdateCustomValue($custom_update_sql, $this->getShortAlias($this->getMainObject()->getAlias()), $value);
+                } else {
+                    $updates_by_filter[] = $column . ' = ' . $value;
+                }
             } else {
                 // TODO check, if there is an id for each value. Those without ids should be put into another query to make an insert
                 // $cases = '';
                 if (count($qpart->getUids()) == 0) {
                     throw new QueryBuilderException('Cannot update attribute "' . $qpart->getAlias() . "': no UIDs for rows to update given!");
                 }
+                
                 foreach ($qpart->getValues() as $row_nr => $value) {
                     $value = $this->prepareInputValue($value, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'));
-                    /*
-                     * IDEA In earlier versions multi-value-updates generated a single query with a CASE statement for each attribute.
-                     * This worked find for smaller numbers of values (<50) but depleted the memory with hundreds of values per attribute.
-                     * A quick fix was to introduce separate queries per value. But it takes a lot of time to fire 1000 separate queries.
-                     * So we could mix the two approaches and make separate queries every 10-30 values with fairly short CASE statements.
-                     * This would shorten the number of queries needed by factor 10-30, but it requires the separation of values of all
-                     * participating attributes into blocks sorted by UID. In other words, the resulting queries must have all values for
-                     * the UIDs they address and a new filter with exactly this list of UIDs.
-                     */
-                    // $cases[$qpart->getUids()[$row_nr]] = 'WHEN ' . $qpart->getUids()[$row_nr] . ' THEN ' . $value . "\n";
-                    $updates_by_uid[$qpart->getUids()[$row_nr]][$this->getShortAlias($this->getMainObject()->getAlias()) . '.' . $attr->getDataAddress()] = $this->getShortAlias($this->getMainObject()->getAlias()) . '.' . $attr->getDataAddress() . ' = ' . $value;
+                    if ($custom_update_sql) {
+                        // If there is a custom update SQL for the attribute, use it ONLY if there is no value
+                        // Otherwise there would not be any possibility to save explicit values
+                        $updates_by_uid[$qpart->getUids()[$row_nr]][$column] = $column . ' = ' . $this->buildSqlUpdateCustomValue($custom_update_sql, $this->getShortAlias($this->getMainObject()->getAlias()), $value);
+                    } else {
+                        /*
+                         * IDEA In earlier versions multi-value-updates generated a single query with a CASE statement for each attribute.
+                         * This worked fine for smaller numbers of values (<50) but depleted the memory with hundreds of values per attribute.
+                         * A quick fix was to introduce separate queries per value. But it takes a lot of time to fire 1000 separate queries.
+                         * So we could mix the two approaches and make separate queries every 10-30 values with fairly short CASE statements.
+                         * This would shorten the number of queries needed by factor 10-30, but it requires the separation of values of all
+                         * participating attributes into blocks sorted by UID. In other words, the resulting queries must have all values for
+                         * the UIDs they address and a new filter with exactly this list of UIDs.
+                         */
+                        // $cases[$qpart->getUids()[$row_nr]] = 'WHEN ' . $qpart->getUids()[$row_nr] . ' THEN ' . $value . "\n";
+                        $updates_by_uid[$qpart->getUids()[$row_nr]][$column] = $column . ' = ' . $value;
+                    }
                 }
                 // See comment about CASE-based updates a few lines above
                 // $updates_by_filter[] = $this->getShortAlias($this->getMainObject()->getAlias()) . '.' . $attr->getDataAddress() . " = CASE " . $this->getMainObject()->getUidAttribute()->getDataAddress() . " \n" . implode($cases) . " END";
@@ -379,6 +429,16 @@ abstract class AbstractSQL extends AbstractQueryBuilder
         
         return $affected_rows;
     }
+    
+    public function buildSqlUpdateCustomValue($statement, $table_alias, $value){
+        return str_replace(array(
+            '[#alias#]',
+            '[#value#]'
+        ), array(
+            $table_alias,
+            $value
+        ), $statement);
+    }
 
     /**
      * Splits the a seta of query parts of the current query into multiple separate queries, each of them containing only query
@@ -389,7 +449,7 @@ abstract class AbstractSQL extends AbstractQueryBuilder
      * ORDER (with the columns NUMBER and DATE) and one for ADDRESS (with the columns STREET and NO).
      *
      * @param QueryPartAttribute[] $qparts            
-     * @return sql_AbstractSQL[]
+     * @return AbstractSqlBuilder[]
      */
     protected function splitByMetaObject(array $qparts)
     {
@@ -668,7 +728,7 @@ else {
         $rev_rel_path = $reg_rel_path->copy()->appendRelation($rev_rel);
         
         // build a subquery
-        /* @var $relq \exface\SqlDataConnector\QueryBuilders\AbstractSQL */
+        /* @var $relq \exface\SqlDataConnector\QueryBuilders\AbstractSqlBuilder */
         $qb_class = get_class($this);
         // TODO Use QueryBuilderFactory here instead
         $relq = new $qb_class();
@@ -1177,7 +1237,7 @@ else {
             $prefix_rel_path = $qpart_rel_path->getSubpath(0, $qpart_rel_path->getIndexOf($start_rel));
             
             // build a subquery
-            /* @var $relq \exface\SqlDataConnector\QueryBuilders\AbstractSQL */
+            /* @var $relq \exface\SqlDataConnector\QueryBuilders\AbstractSqlBuilder */
             $qb_class = get_class($this);
             $relq = new $qb_class();
             $relq->setMainObject($start_rel->getRelatedObject());
