@@ -34,7 +34,7 @@ class OracleSQL extends AbstractSqlBuilder
 {
 
     // CONFIG
-    protected $short_alias_max_length = 30;
+    protected $short_alias_max_length = 28;
 
     // maximum length of SELECT AS aliases
     protected $short_alias_remove_chars = array(
@@ -150,9 +150,12 @@ class OracleSQL extends AbstractSqlBuilder
                     // they should be done after pagination as they are potentially very time consuming
                     if ($this->checkForSqlStatement($qpart->getAttribute()->getDataAddress()) && (! $group_by || ! $qpart->getAggregateFunction())) {
                         continue;
-                    } elseif ($qpart->getUsedRelations(Relation::RELATION_TYPE_REVERSE)) {
+                    } elseif ($qpart->getUsedRelations(Relation::RELATION_TYPE_REVERSE) && ! $this->getAggregation($qpart->getAlias())) {
                         // Also skip selects with reverse relations, as they will be fetched via subselects later
                         // Selecting them in the core query would only slow it down. The filtering ist done explicitly in build_sql_where_condition()
+                        // FIXME This only works if the reverse relation can be joined onto something coming out of the GROUP BY. If we need UIDs of
+                        // objects being grouped, the subselect must go into the core query! But how to find out, if the columns inside the group are
+                        // needed?
                         continue;
                     } else {
                         // Add all remainig attributes of the core objects to the core query and select them 1-to-1 in the enrichment query
