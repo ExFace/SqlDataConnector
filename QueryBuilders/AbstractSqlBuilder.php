@@ -270,6 +270,14 @@ abstract class AbstractSqlBuilder extends AbstractQueryBuilder
         // possibility of mixed creates and updates among multiple rows. But an empty non-required attribute will never
         // show up as a value here. Still that value is required!
         if (is_null($uid_qpart) && $uid_generator = $this->getMainObject()->getUidAttribute()->getDataAddressProperty('SQL_INSERT')) {
+            $uid_generator = str_replace(array(
+                '[#alias#]',
+                '[#value#]'
+            ), array(
+                $this->getMainObject()->getAlias(),
+                $this->prepareInputValue('', $this->getMainObject()->getUidAttribute()->getDataType(), $this->getMainObject()->getUidAttribute()->getDataAddressProperty('SQL_DATA_TYPE'))
+            ), $uid_generator);
+            
             $last_uid_sql_var = '@last_uid';
             $columns[] = $this->getMainObject()->getUidAttribute()->getDataAddress();
             foreach ($values as $nr => $row) {
