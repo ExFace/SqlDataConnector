@@ -1105,7 +1105,7 @@ else {
         $where = $qpart->getDataAddressProperty('WHERE');
         $object_alias = ($attr->getRelationPath()->toString() ? $attr->getRelationPath()->toString() : $this->getMainObject()->getAlias());
         
-        // doublecheck that the attribut is known
+        // doublecheck that the attribute is known
         if (! ($select || $where) || $val === '') {
             throw new QueryBuilderException('Illegal filter on object "' . $this->getMainObject()->getAlias() . ', expression "' . $qpart->getAlias() . '", Value: "' . $val . '".');
             return false;
@@ -1169,10 +1169,10 @@ else {
                 $value = '(' . implode(',', $values) . ')' . ($value ? ' OR ' . $value : '');
             }
         } catch (DataTypeValidationError $e) {
-            // TODO Not sure, if it is wise to skip invalid filters. Perhaps we should rethrow the exception here. This would, howerver
-            // cause error on bad prefills, etc. Maybe throw a warning, once the separation of errors and warnings is implemented
-            // throw $e;
-            return '';
+            // If the data type is incompatible with the value, return a WHERE clause, that is always false.
+            // A comparison of a date field with a string or a number field with
+            // a string simply cannot result in TRUE.
+            return '1 = 0 /* ' . $subject . ' cannot pass comparison to "' . $value . '" via comparator "' . $comparator . '": wrong data type! */';
         }
         
         // If everything is OK, build the SQL
