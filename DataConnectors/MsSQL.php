@@ -243,16 +243,6 @@ class MsSQL extends AbstractSqlConnector
         return $this;
     }
 
-    public function getCharacterSet()
-    {
-        return $this->getCharacterSet();
-    }
-
-    public function setCharacterSet($value)
-    {
-        return $this->setCharacterSet($value);
-    }
-
     /**
      *
      * {@inheritdoc}
