@@ -957,6 +957,7 @@ else {
         $val = $qpart->getCompareValue();
         $attr = $qpart->getAttribute();
         $comp = $qpart->getComparator();
+        $delimiter = $qpart->getValueListDelimiter();
         
         $select = $this->buildSqlGroupFunction($qpart);
         $where = $qpart->getDataAddressProperty('WHERE');
@@ -990,7 +991,7 @@ else {
                 $subj = $select;
             }
             // Do the actual comparing
-            $output = $this->buildSqlWhereComparator($subj, $comp, $val, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'));
+            $output = $this->buildSqlWhereComparator($subj, $comp, $val, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'), $delimiter);
         }
         
         return $output;
@@ -1084,6 +1085,7 @@ else {
         $val = $qpart->getCompareValue();
         $attr = $qpart->getAttribute();
         $comp = $qpart->getComparator();
+        $delimiter = $qpart->getValueListDelimiter();
         
         if ($attr->isRelation() && $comp != EXF_COMPARATOR_IN) {
             // always use the equals comparator for foreign keys! It's faster!
@@ -1137,13 +1139,23 @@ else {
                     $subj = $this->getShortAlias($object_alias) . $this->getQueryId() . '.' . $select;
                 }
                 // Do the actual comparing
-                $output = $this->buildSqlWhereComparator($subj, $comp, $val, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'));
+                $output = $this->buildSqlWhereComparator($subj, $comp, $val, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'), $delimiter);
             }
         }
         return $output;
     }
-
-    protected function buildSqlWhereComparator($subject, $comparator, $value, AbstractDataType $data_type, $sql_data_type = NULL)
+    
+    /**
+     * 
+     * @param string $subject column name or subselect
+     * @param string $comparator one of the EXF_COMPARATOR_xxx constants
+     * @param string $value value or SQL expression to compare to
+     * @param AbstractDataType $data_type
+     * @param string $sql_data_type value of SQL_DATA_TYPE data source setting
+     * @param string $value_list_delimiter delimiter used to separate concatenated lists of values
+     * @return string
+     */
+    protected function buildSqlWhereComparator($subject, $comparator, $value, AbstractDataType $data_type, $sql_data_type = NULL, $value_list_delimiter = EXF_LIST_SEPARATOR)
     {
         // Check if the value is of valid type.
         try {
@@ -1152,9 +1164,9 @@ else {
             if ($comparator != EXF_COMPARATOR_IN && $comparator != EXF_COMPARATOR_NOT_IN) {
                 $value = $data_type::parse($value);
             } else {
-                $values = explode(EXF_LIST_SEPARATOR, $value);
+                $values = explode($value_list_delimiter, $value);
                 $value = '';
-                // $values = explode(EXF_LIST_SEPARATOR, trim($value, EXF_LIST_SEPARATOR));
+                // $values = explode($value_list_delimiter, trim($value, $value_list_delimiter));
                 foreach ($values as $nr => $val) {
                     // If there is an empty string among the values, this means that the value may be empty (NULL). NULL is not a valid
                     // value for an IN-statement, though, so we need to append an "OR IS NULL" here.

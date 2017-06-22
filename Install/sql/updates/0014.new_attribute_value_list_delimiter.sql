@@ -1,0 +1,1 @@
+ALTER TABLE `exf_attribute` ADD `value_list_delimiter` VARCHAR(3) NOT NULL DEFAULT ',' AFTER `default_aggregate_function`;

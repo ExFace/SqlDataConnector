@@ -257,6 +257,7 @@ Relation::RELATION_TYPE_REVERSE); // relation type
         $attr->setDefaultSorterDir($row['default_sorter_dir']);
         $attr->setShortDescription($row['attribute_short_description']);
         $attr->setDefaultAggregateFunction($row['default_aggregate_function']);
+        $attr->setValueListDelimiter($row['value_list_delimiter']);
         
         // Create the UXON for the default editor widget
         // Start with the data type widget
