@@ -832,7 +832,7 @@ else {
     protected function buildSqlFrom()
     {
         // here we simply have to replace the placeholders in case the from-clause ist a custom sql statement
-        return str_replace('[#alias#]', $this->getMainObject()->getAlias(), $this->getMainObject()->getDataAddress()) . ' ' . $this->getShortAlias($this->getMainObject()->getAlias()) . $this->getQueryId();
+        return str_replace('[#alias#]', $this->getMainObject()->getAlias(), $this->getMainObject()->getDataAddress()) . ' ' . $this->getShortAlias($this->getMainObject()->getAlias() . $this->getQueryId());
     }
 
     /**
@@ -864,15 +864,15 @@ else {
                 // sql) into the enrichment query. In this case, we need to join the table of the main object to
                 // the core query again, after pagination, so possible back references within the custom select can
                 // still be resolved.
-                $right_table_alias = $this->getShortAlias($this->getMainObject()->getAlias()) . $this->getQueryId();
+                $right_table_alias = $this->getShortAlias($this->getMainObject()->getAlias() . $this->getQueryId());
                 $joins[$right_table_alias] = "\n LEFT JOIN " . str_replace('[#alias#]', $right_table_alias, $this->getMainObject()->getDataAddress()) . ' ' . $right_table_alias . ' ON ' . $left_table_alias . '.' . $this->getMainObject()->getUidAlias() . ' = ' . $right_table_alias . '.' . $this->getMainObject()->getUidAlias();
             } else {
                 // In most cases we will build joins for attributes of related objects.
-                $left_table_alias = $this->getShortAlias($left_table_alias ? $left_table_alias : $this->getMainObject()->getAlias()) . $this->getQueryId();
+                $left_table_alias = $this->getShortAlias(($left_table_alias ? $left_table_alias : $this->getMainObject()->getAlias()) . $this->getQueryId());
                 $left_obj = $this->getMainObject();
                 foreach ($rels as $alias => $rel) {
                     if ($rel->isForwardRelation()) {
-                        $right_table_alias = $this->getShortAlias($alias) . $this->getQueryId();
+                        $right_table_alias = $this->getShortAlias($alias . $this->getQueryId());
                         $right_obj = $this->getMainObject()->getRelatedObject($alias);
                         // generate the join sql
                         $left_join_on = $this->buildSqlJoinSide($left_obj->getAttribute($rel->getForeignKeyAlias())->getDataAddress(), $left_table_alias);
@@ -976,7 +976,7 @@ else {
                 '[#alias#]',
                 '[#value#]'
             ), array(
-                $object_alias . $this->getQueryId(),
+                $this->getShortAlias($object_alias . $this->getQueryId()),
                 $val
             ), $where);
         } else {
@@ -985,7 +985,7 @@ else {
                 $subj = str_replace(array(
                     '[#alias#]'
                 ), array(
-                    $this->getShortAlias($object_alias) . $this->getQueryId()
+                    $this->getShortAlias($object_alias . $this->getQueryId()) 
                 ), $select);
             } else {
                 $subj = $select;
@@ -1124,7 +1124,7 @@ else {
                     '[#alias#]',
                     '[#value#]'
                 ), array(
-                    $object_alias . $this->getQueryId(),
+                    $this->getShortAlias($object_alias . $this->getQueryId()),
                     $val
                 ), $where);
             } else {
@@ -1133,10 +1133,10 @@ else {
                     $subj = str_replace(array(
                         '[#alias#]'
                     ), array(
-                        $this->getShortAlias($object_alias) . $this->getQueryId()
+                        $this->getShortAlias($object_alias . $this->getQueryId())
                     ), $select);
                 } else {
-                    $subj = $this->getShortAlias($object_alias) . $this->getQueryId() . '.' . $select;
+                    $subj = $this->getShortAlias($object_alias . $this->getQueryId()) . '.' . $select;
                 }
                 // Do the actual comparing
                 $output = $this->buildSqlWhereComparator($subj, $comp, $val, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'), $delimiter);
@@ -1342,7 +1342,7 @@ else {
             if (is_null($select_from)) {
                 $select_from = $qpart->getAttribute()->getRelationPath()->toString() ? $qpart->getAttribute()->getRelationPath()->toString() : $this->getMainObject()->getAlias();
             }
-            $output = ($select_from ? $this->getShortAlias($select_from) . $this->getQueryId() . '.' : '') . $qpart->getAttribute()->getDataAddress();
+            $output = ($select_from ? $this->getShortAlias($select_from . $this->getQueryId()) . '.' : '') . $qpart->getAttribute()->getDataAddress();
         }
         return $output;
     }
