@@ -257,7 +257,9 @@ class SqlSchemaInstaller extends AbstractAppInstaller
                     continue;
                 }
                 $sql = file_get_contents($updates_folder . DIRECTORY_SEPARATOR . $file);
-                // $sql = trim(preg_replace('/\s+/', ' ', $sql));
+                // Strip comments
+                $sql= preg_replace('!/\*.*?\*/!s', '', $sql);
+                $sql = preg_replace('/\n\s*\n/', "\n", $sql);
                 try {
                     $this->getDataConnection()->transactionStart();
                     foreach (preg_split("/;\R/", $sql) as $statement) {
@@ -275,7 +277,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller
         }
         // Save the last id in order to skip installed ones next time
         if (count($updates_installed) > 0) {
-            $this->setLastModelSourceUpdateId(end($updates_installed));
+            $this->setLastUpdateId(end($updates_installed));
         }
         
         if ($installed_counter = count($updates_installed)) {
@@ -306,7 +308,7 @@ class SqlSchemaInstaller extends AbstractAppInstaller
      * @param string $id            
      * @return $this
      */
-    protected function setLastModelSourceUpdateId($id)
+    protected function setLastUpdateId($id)
     {
         $this->getApp()->getConfig()->setOption($this->getLastUpdateIdConfigOption(), $id, AppInterface::CONFIG_SCOPE_INSTALLATION); 
         return $this;
