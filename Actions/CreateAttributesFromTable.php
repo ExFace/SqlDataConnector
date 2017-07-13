@@ -5,6 +5,7 @@ use exface\Core\CommonLogic\AbstractAction;
 use exface\Core\Exceptions\Actions\ActionInputInvalidObjectError;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\Core\Exceptions\Actions\ActionInputTypeError;
+use exface\Core\CommonLogic\Constants\Icons;
 
 /**
  * This action runs one or more selected test steps
@@ -17,7 +18,7 @@ class CreateAttributesFromTable extends AbstractAction
 
     protected function init()
     {
-        $this->setIconName('gears');
+        $this->setIconName(Icons::COGS);
         $this->setInputRowsMin(1);
         $this->setInputRowsMax(null);
     }
