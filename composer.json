@@ -24,5 +24,13 @@
             "model_md5": "f695b0d0a5a45f7daa68c5178583745c",
             "model_timestamp": "2017-04-27 08:30:01"
         }
+    },
+    "autoload": {
+        "psr-4": { "exface\\SqlDataConnector\\": "" },
+        "exclude-from-classmap": [
+            "/Config/",
+            "/Translations/",
+            "/Model/"
+        ]
     }
 }
