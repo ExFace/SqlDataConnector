@@ -24,19 +24,45 @@ use exface\Core\Interfaces\AppInterface;
 use exface\Core\Interfaces\WidgetInterface;
 use exface\SqlDataConnector\SqlSchemaInstaller;
 use exface\Core\CommonLogic\NameResolver;
+use exface\Core\Interfaces\Model\ModelInterface;
 
 class SqlModelLoader implements ModelLoaderInterface
 {
 
     private $data_connection = null;
-
+    
     /**
      *
-     * {@inheritdoc}
-     *
-     * @see \exface\Core\Interfaces\DataSources\ModelLoaderInterface::loadObject()
+     * {@inheritDoc}
+     * @see \exface\Core\Interfaces\DataSources\ModelLoaderInterface::loadObjectById($object_id)
      */
-    public function loadObject(Object $object)
+    public function loadObjectById(ModelInterface $model, $object_id)
+    {
+        $obj = new \exface\Core\CommonLogic\Model\Object($model);
+        $obj->setId($object_id);
+        return $this->loadObject($obj);
+    }
+    
+    /**
+     *
+     * {@inheritDoc}
+     * @see \exface\Core\Interfaces\DataSources\ModelLoaderInterface::loadObjectByAlias($app, $object_alias)
+     */
+    public function loadObjectByAlias(AppInterface $app, $object_alias)
+    {
+        $obj = new \exface\Core\CommonLogic\Model\Object($app->getWorkbench()->model());
+        $obj->setAlias($object_alias);
+        $obj->setNamespace($app->getAliasWithNamespace());
+        return $this->loadObject($obj);        
+    }
+
+    /**
+     * Loads metamodel data into the given object
+     * 
+     * @param Object $object
+     * @return Object
+     */
+    protected function loadObject(Object $object)
     {
         $exface = $object->getWorkbench();
         $load_behaviors = false;
@@ -192,14 +218,16 @@ class SqlModelLoader implements ModelLoaderInterface
                     // relation to the parent. Would that be usefull for objects sharing attributes but using different data_addresses?
                     if ($object->getId() != $row['object_oid'] && ! in_array($row['object_oid'], $object->getParentObjectsIds())) {
                         // FIXME what is the related_object_key_alias for reverse relations?
-                        $rel = new Relation($exface, $row['oid'], // id
-$row['rev_relation_alias'], // alias
-$row['rev_relation_name'], // name (used for captions)
-$row['related_object_oid'], // main object
-$row['attribute_alias'], // foreign key in the main object
-$row['object_oid'], // related object
-null, // related object key attribute (uid)
-Relation::RELATION_TYPE_REVERSE); // relation type
+                        $rel = new Relation(
+                            $exface, 
+                            $row['oid'], // id
+                            $row['rev_relation_alias'], // alias
+                            $row['rev_relation_name'], // name (used for captions)
+                            $row['related_object_oid'], // main object
+                            $row['attribute_alias'], // foreign key in the main object
+                            $row['object_oid'], // related object
+                            null, // related object key attribute (uid)
+                            Relation::RELATION_TYPE_REVERSE); // relation type
                     } elseif ($attr) {
                         // At this point, we know, it is a direct relation. This can only happen if the object has a corresponding direct
                         // attribute. This is why the elseif($attr) is there.
@@ -468,6 +496,26 @@ Relation::RELATION_TYPE_REVERSE); // relation type
         $installer->setDataConnection($this->getDataConnection());
         $installer->setLastUpdateIdConfigOption('LAST_PERFORMED_MODEL_SOURCE_UPDATE_ID');
         return $installer;
+    }
+    
+    /**
+     *
+     *
+     * @param Object $object
+     */
+    public function loadAttribute(Object $object, $attribute_alias)
+    {
+        return $object->getAttribute($attribute_alias);
+    }
+    
+    /**
+     *
+     *
+     * @param Object $object
+     */
+    public function loadRelation(Object $object, $relation_alias)
+    {
+        return $object->getRelation($relation_alias);   
     }
 }
 
