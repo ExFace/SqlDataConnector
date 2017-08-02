@@ -68,14 +68,14 @@
     "rows": [
         {
             "CREATED_ON": "2016-11-21 15:01:57",
-            "MODIFIED_ON": "2016-11-21 15:01:33",
+            "MODIFIED_ON": "2017-08-02 09:20:15",
             "CREATED_BY_USER": "0x31000000000000000000000000000000",
             "MODIFIED_BY_USER": "0x31000000000000000000000000000000",
             "UID": "0x11e6affb715baea58943e4b318306b9a",
             "PACKAGE": "exface\/SqlDataConnector",
             "ALIAS": "exface.SqlDataConnector",
-            "NAME": "SQL Data Connector for ExFace",
-            "LABEL": "SQL Data Connector for ExFace"
+            "NAME": "ExFace SQL Data Connector for ExFace",
+            "LABEL": "ExFace SQL Data Connector for ExFace"
         }
     ],
     "totals_rows": [],

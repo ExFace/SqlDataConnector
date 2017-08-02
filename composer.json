@@ -21,12 +21,14 @@
         "app": {
             "app_uid": "0x11e6affb715baea58943e4b318306b9a",
             "app_alias": "exface.SqlDataConnector",
-            "model_md5": "f695b0d0a5a45f7daa68c5178583745c",
-            "model_timestamp": "2017-04-27 08:30:01"
+            "model_md5": "382deb02673c1b6c98079694f3a15d11",
+            "model_timestamp": "2017-08-02 09:20:15"
         }
     },
     "autoload": {
-        "psr-4": { "exface\\SqlDataConnector\\": "" },
+        "psr-4": {
+            "exface\\SqlDataConnector\\": ""
+        },
         "exclude-from-classmap": [
             "/Config/",
             "/Translations/",
