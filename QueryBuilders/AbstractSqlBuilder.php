@@ -31,6 +31,15 @@ use exface\Core\CommonLogic\DataSheets\DataAggregator;
  * LOB, etc. Refer to the description of the specific query builder for concrete
  * usage instructions.
  * 
+ * - **SQL_SELECT** - custom SQL statement for the value in a SELECT statement.
+ * The placeholders [#alias#] and [#value#] are supported. This is usefull to
+ * write wrappers for values (e.g. "NVL('[#value#]', 0)". If the wrapper is
+ * placed here, it data address would remain writable, while replacing the
+ * column name with a custom SQL statement in the data address itself, would
+ * cause an error when writing to it.
+ * 
+ * - **SQL_SELECT_DATA_ADDRESS** - replaces the data address for SELECT queries
+ * 
  * - **SQL_INSERT** - custom SQL statement for the value in an INSERT statement.
  * The placeholders [#alias#] and [#value#] are supported. This is usefull to
  * write wrappers for values (e.g. "to_clob('[#value#]')" to save a string value 
@@ -690,14 +699,21 @@ else {
                 // if the column to select is explicitly defined, just select it
                 $output = $select_from . '.' . $select_column;
             } elseif ($this->checkForSqlStatement($attribute->getDataAddress())) {
-                // see if the attribute is a statement.
-                // set aliases
+                // see if the attribute is a statement. If so, just replace placeholders
                 $output = '(' . str_replace(array(
                     '[#alias#]'
                 ), $select_from, $attribute->getDataAddress()) . ')';
+            } elseif ($custom_select = $attribute->getDataAddressProperty('SQL_SELECT')){
+                // IF there is a custom SQL_SELECT statement, use it.
+                $output = '(' . str_replace(array(
+                    '[#alias#]'
+                ), $select_from, $custom_select) . ')';
             } else {
                 // otherwise get the select from the attribute
-                $output = $select_from . '.' . $attribute->getDataAddress();
+                if (! $data_address = $attribute->getDataAddressProperty('SQL_SELECT_DATA_ADDRESS')){
+                    $data_address = $attribute->getDataAddress();
+                }
+                $output = $select_from . '.' . $data_address;
             }
         }
         
