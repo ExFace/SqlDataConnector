@@ -45,7 +45,7 @@ use exface\Core\CommonLogic\DataSheets\DataAggregator;
  * write wrappers for values (e.g. "to_clob('[#value#]')" to save a string value 
  * to an Oracle CLOB column) or generators (e.g. you could use "UUID()" in MySQL 
  * to have a column always created with a UUID). If you need to use a generator
- * only if no value is given, use something like this: 
+ * only if no value is given explicitly, use something like this: 
  * IF([#value#]!='', [#value#], UUID())
  * 
  * - **SQL_INSERT_DATA_ADDRESS** - replaces the data address for INSERT queries
