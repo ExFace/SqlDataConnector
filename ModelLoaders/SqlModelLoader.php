@@ -161,16 +161,16 @@ class SqlModelLoader implements ModelLoaderInterface
                         // always add a LABEL attribute if it is not already called LABEL (widgets always need to show the LABEL!)
                         // IDEA cleaner code does not work for some reason. Didn't have time to check out why...
                         /*
-                         * if ($row['attribute_alias'] != $object->getModel()->getWorkbench()->getConfig()->getOption('OBJECT_LABEL_ALIAS')){
+                         * if ($row['attribute_alias'] != $object->getModel()->getWorkbench()->getConfig()->getOption('METAMODEL.OBJECT_LABEL_ALIAS')){
                          * $label_attribute = attribute::from_db_row($row);
-                         * $label_attribute->setAlias($object->getModel()->getWorkbench()->getConfig()->getOption('OBJECT_LABEL_ALIAS'));
+                         * $label_attribute->setAlias($object->getModel()->getWorkbench()->getConfig()->getOption('METAMODEL.OBJECT_LABEL_ALIAS'));
                          * $label_attribute->setDefaultDisplayOrder(-1);
                          * $object->getAttributes()->add($label_attribute);
                          * }
                          */
-                        if ($row['attribute_alias'] != $object->getModel()->getWorkbench()->getConfig()->getOption('OBJECT_LABEL_ALIAS')) {
+                        if ($row['attribute_alias'] != $object->getModel()->getWorkbench()->getConfig()->getOption('METAMODEL.OBJECT_LABEL_ALIAS')) {
                             $label_attribute = $row;
-                            $label_attribute['attribute_alias'] = $object->getModel()->getWorkbench()->getConfig()->getOption('OBJECT_LABEL_ALIAS');
+                            $label_attribute['attribute_alias'] = $object->getModel()->getWorkbench()->getConfig()->getOption('METAMODEL.OBJECT_LABEL_ALIAS');
                             $label_attribute['attribute_hidden_flag'] = '1';
                             $label_attribute['attribute_required_flag'] = '0';
                             $label_attribute['attribute_editable_flag'] = '0';
@@ -293,7 +293,7 @@ class SqlModelLoader implements ModelLoaderInterface
         // If anything goes wrong, create a blank widget with the overall default widget type (from the config)
         if (! $uxon) {
             $uxon = new UxonObject();
-            $uxon->setProperty('widget_type', $model->getWorkbench()->getConfig()->getOption('WIDGET_FOR_UNKNOWN_DATA_TYPES'));
+            $uxon->setProperty('widget_type', $model->getWorkbench()->getConfig()->getOption('TEMPLATES.WIDGET_FOR_UNKNOWN_DATA_TYPES'));
         }
         // Extend by the specific uxon for this attribute if specified
         if ($row['default_editor_uxon']) {
