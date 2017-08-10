@@ -1145,6 +1145,7 @@ else {
         
         $select = $attr->getDataAddress();
         $where = $qpart->getDataAddressProperty('WHERE');
+        $where_data_address = $qpart->getDataAddressProperty('SQL_WHERE_DATA_ADDRESS');
         $object_alias = ($attr->getRelationPath()->toString() ? $attr->getRelationPath()->toString() : $this->getMainObject()->getAlias());
         
         // doublecheck that the attribute is known
@@ -1167,6 +1168,13 @@ else {
                     $this->getShortAlias($object_alias . $this->getQueryId()),
                     $val
                 ), $where);
+                return $output;
+            } elseif($where_data_address) {
+                $subj = str_replace(array(
+                    '[#alias#]'
+                ), array(
+                    $this->getShortAlias($object_alias . $this->getQueryId())
+                ), $where_data_address);
             } else {
                 // Determine, what we are going to compare to the value: a subquery or a column
                 if ($this->checkForSqlStatement($attr->getDataAddress())) {
@@ -1178,9 +1186,9 @@ else {
                 } else {
                     $subj = $this->getShortAlias($object_alias . $this->getQueryId()) . '.' . $select;
                 }
-                // Do the actual comparing
-                $output = $this->buildSqlWhereComparator($subj, $comp, $val, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'), $delimiter);
             }
+            // Do the actual comparing
+            $output = $this->buildSqlWhereComparator($subj, $comp, $val, $attr->getDataType(), $attr->getDataAddressProperty('SQL_DATA_TYPE'), $delimiter);
         }
         return $output;
     }
