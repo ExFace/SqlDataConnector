@@ -1,7 +1,6 @@
 <?php
 namespace exface\SqlDataConnector;
 
-use exface\Core\CommonLogic\AbstractApp;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\Core\CommonLogic\AbstractAppInstaller;
 use exface\Core\Interfaces\AppInterface;
@@ -62,10 +61,9 @@ class SqlSchemaInstaller extends AbstractAppInstaller
     private $last_update_id_config_option = 'INSTALLER.SQL_UPDATE_LAST_PERFORMED_ID';
 
     /**
-     *
-     * {@inheritdoc}
-     *
-     * @see \exface\Core\CommonLogic\AbstractApp::install()
+     * 
+     * {@inheritDoc}
+     * @see \exface\Core\Interfaces\InstallerInterface::install()
      */
     public function install($source_absolute_path)
     {

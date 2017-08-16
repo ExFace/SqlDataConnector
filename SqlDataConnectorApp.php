@@ -5,13 +5,13 @@ use exface\Core\CommonLogic\Model\Object;
 use exface\Core\CommonLogic\NameResolver;
 use exface\Core\Exceptions\UnexpectedValueException;
 use exface\Core\Interfaces\InstallerInterface;
-use exface\Core\CommonLogic\AbstractApp;
 use exface\SqlDataConnector\SqlExplorer\OracleSQLExplorer;
 use exface\SqlDataConnector\SqlExplorer\MySQLExplorer;
 use exface\SqlDataConnector\SqlExplorer\MSSQLExplorer;
 use exface\SqlDataConnector\SqlExplorer\AbstractSQLExplorer;
+use exface\Core\CommonLogic\Model\App;
 
-class SqlDataConnectorApp extends AbstractApp
+class SqlDataConnectorApp extends App
 {
 
     const FOLDER_WITH_MODEL_SOURCE_SQL = 'ModelSource';
