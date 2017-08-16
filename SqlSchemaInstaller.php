@@ -2,7 +2,7 @@
 namespace exface\SqlDataConnector;
 
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
-use exface\Core\CommonLogic\AbstractAppInstaller;
+use exface\Core\CommonLogic\AppInstallers\AbstractAppInstaller;
 use exface\Core\Interfaces\AppInterface;
 use exface\Core\Exceptions\Configuration\ConfigOptionNotFoundError;
 
