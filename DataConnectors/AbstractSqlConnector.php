@@ -13,7 +13,7 @@ use exface\Core\Exceptions\NotImplementedError;
  * @author Andrej Kabachnik
  *        
  */
-abstract class AbstractSqlConnector extends AbstractDataConnector implements SqlDataConnectorInterface
+abstract class AbstractSqlConnector extends AbstractDataConnector implements SqlDataConnectorInterface, \exface\Core\Interfaces\DataSources\SqlDataConnectorInterface
 {
 
     private $current_connection;
