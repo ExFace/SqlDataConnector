@@ -35,10 +35,10 @@ class CreateAttributesFromTable extends AbstractAction
             /* @var $target_obj \exface\Core\CommonLogic\Model\Object */
             $target_obj = $this->getWorkbench()->model()->getObject($input_row[$this->getInputDataSheet()->getUidColumn()->getName()]);
             $target_obj_connection = $target_obj->getDataConnection();
-            if (! ($target_obj_connection instanceof SqlDataConnectorInterface)) {
+            if (! ($target_obj_connection instanceof \exface\Core\Interfaces\DataSources\SqlDataConnectorInterface)) {
                 throw new ActionInputTypeError($this, 'Cannot create attributes from SQL table for data connection "' . $target_obj_connection->getAliasWithNamespace() . '": only SQL connections supported (must implement the SqlDataConnectorInterface!).');
             }
-            foreach ($target_obj_connection->getSqlExplorer()->getAttributePropertiesFromTable($target_obj, $input_row['DATA_ADDRESS']) as $row) {
+            foreach ($target_obj_connection->getModelizer()->getAttributePropertiesFromTable($target_obj, $input_row['DATA_ADDRESS']) as $row) {
                 if ($target_obj->findAttributesByDataAddress($row['DATA_ADDRESS'])) {
                     $skipped_columns ++;
                     continue;
