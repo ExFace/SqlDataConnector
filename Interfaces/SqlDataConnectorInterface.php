@@ -2,7 +2,7 @@
 namespace exface\SqlDataConnector\Interfaces;
 
 use exface\Core\Interfaces\DataSources\DataConnectionInterface;
-use exface\SqlDataConnector\SqlDataQuery;
+use exface\Core\CommonLogic\QueryBuilder\SqlDataQuery;
 
 interface SqlDataConnectorInterface extends DataConnectionInterface
 {

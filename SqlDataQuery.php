@@ -29,7 +29,7 @@ class SqlDataQuery extends AbstractDataQuery
     /**
      *
      * @param string $value            
-     * @return \exface\SqlDataConnector\SqlDataQuery
+     * @return \exface\Core\CommonLogic\QueryBuilder\SqlDataQuery
      */
     public function setSql($value)
     {

@@ -6,7 +6,7 @@ use exface\Core\Exceptions\DataSources\DataConnectionFailedError;
 use exface\Core\Exceptions\DataSources\DataConnectionTransactionStartError;
 use exface\Core\Exceptions\DataSources\DataConnectionCommitFailedError;
 use exface\Core\Exceptions\DataSources\DataConnectionRollbackFailedError;
-use exface\SqlDataConnector\SqlDataQuery;
+use exface\Core\CommonLogic\QueryBuilder\SqlDataQuery;
 use exface\Core\Exceptions\DataSources\DataQueryFailedError;
 use exface\SqlDataConnector\SqlExplorer\MySQLExplorer;
 

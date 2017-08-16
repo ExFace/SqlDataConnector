@@ -12,7 +12,7 @@ use exface\Core\CommonLogic\Model\RelationPath;
 use exface\Core\Exceptions\DataTypeValidationError;
 use exface\Core\DataTypes\NumberDataType;
 use exface\SqlDataConnector\DataConnectors\AbstractSqlConnector;
-use exface\SqlDataConnector\SqlDataQuery;
+use exface\Core\CommonLogic\QueryBuilder\SqlDataQuery;
 use exface\Core\CommonLogic\QueryBuilder\QueryPartSelect;
 use exface\Core\CommonLogic\Model\Relation;
 use exface\Core\CommonLogic\DataSheets\DataAggregator;
