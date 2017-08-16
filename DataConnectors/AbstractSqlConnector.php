@@ -238,5 +238,15 @@ abstract class AbstractSqlConnector extends AbstractDataConnector implements Sql
     {
         throw new NotImplementedError('Cannot create an SQL explorer for a general ODBC connection!');
     }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     * @see \exface\Core\Interfaces\DataSources\SqlDataConnectorInterface::getModelizer()
+     */
+    public function getModelizer()
+    {
+        return $this->getSqlExplorer();
+    }
 }
 ?>
