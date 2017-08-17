@@ -1,7 +1,7 @@
 <?php
 namespace exface\SqlDataConnector;
 
-use exface\Core\CommonLogic\AbstractDataQuery;
+use exface\Core\CommonLogic\DataQueries\AbstractDataQuery;
 use exface\SqlDataConnector\Interfaces\SqlDataConnectorInterface;
 use exface\Core\Factories\WidgetFactory;
 use exface\Core\Widgets\DebugMessage;
@@ -29,7 +29,7 @@ class SqlDataQuery extends AbstractDataQuery
     /**
      *
      * @param string $value            
-     * @return \exface\Core\CommonLogic\QueryBuilder\SqlDataQuery
+     * @return \exface\Core\CommonLogic\DataQueries\SqlDataQuery
      */
     public function setSql($value)
     {
@@ -66,7 +66,7 @@ class SqlDataQuery extends AbstractDataQuery
      *
      * {@inheritdoc}
      *
-     * @see \exface\Core\CommonLogic\AbstractDataQuery::importString()
+     * @see \exface\Core\CommonLogic\DataQueries\AbstractDataQuery::importString()
      */
     public function importString($string)
     {
@@ -77,7 +77,7 @@ class SqlDataQuery extends AbstractDataQuery
      *
      * {@inheritdoc}
      *
-     * @see \exface\Core\CommonLogic\AbstractDataQuery::exportUxonObject()
+     * @see \exface\Core\CommonLogic\DataQueries\AbstractDataQuery::exportUxonObject()
      */
     public function exportUxonObject()
     {
@@ -126,7 +126,7 @@ class SqlDataQuery extends AbstractDataQuery
      *
      * {@inheritdoc}
      *
-     * @see \exface\Core\CommonLogic\AbstractDataQuery::toString()
+     * @see \exface\Core\CommonLogic\DataQueries\AbstractDataQuery::toString()
      */
     public function toString()
     {
@@ -137,7 +137,7 @@ class SqlDataQuery extends AbstractDataQuery
      *
      * {@inheritdoc} The SQL query creates a debug panel showing a formatted SQL statement.
      *              
-     * @see \exface\Core\CommonLogic\AbstractDataQuery::createDebugWidget()
+     * @see \exface\Core\CommonLogic\DataQueries\AbstractDataQuery::createDebugWidget()
      */
     public function createDebugWidget(DebugMessage $debug_widget)
     {
